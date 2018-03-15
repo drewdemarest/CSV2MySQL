@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql
+QT       += core gui sql concurrent
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -24,30 +24,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
     entity/order/order.cpp \
     exporter/mysqlexporter.cpp \
-    importer/csvimporter.cpp \
-    json2sqlite/json2sqlite.cpp \
-    main.cpp \
-    mainwindow.cpp \
-    entity/order/order.cpp \
-    exporter/mysqlexporter.cpp \
+    importer/charliescsvimporter.cpp \
     importer/csvimporter.cpp \
     json2sqlite/json2sqlite.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
-        mainwindow.h \
     entity/order/order.h \
     exporter/mysqlexporter.h \
-    importer/csvimporter.h \
-    json2sqlite/json2sqlite.h \
-    mainwindow.h \
-    entity/order/order.h \
-    exporter/mysqlexporter.h \
+    importer/charliescsvimporter.h \
     importer/csvimporter.h \
     json2sqlite/json2sqlite.h \
     mainwindow.h

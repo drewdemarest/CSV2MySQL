@@ -342,16 +342,11 @@ bool Json2Sqlite::makeInitialArrayDatabase(QString dbPath, QString table, QStrin
     QJsonObject jsonObject = jsonArray.first().toObject();
     QStringList jsonObjectKeys = jsonObject.keys();
 
+    queryString.append("'" + primaryKey + "'" + " text PRIMARY KEY, ");
     for(auto key : uniqueKeys)
     {
-        if(key == primaryKey)
-        {
-            queryString.append("'" + key + "'" + " text PRIMARY KEY, ");
-        }
-        else
-        {
+        if(key != primaryKey)
             queryString.append("'" + key + "'" + " text, ");
-        }
     }
 
 
