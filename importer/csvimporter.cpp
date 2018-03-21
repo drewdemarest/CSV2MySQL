@@ -50,7 +50,7 @@ QJsonArray CSVImporter::importAsQJsonArray(const QMap<QString, int> &fileMap, co
 {
     QList<QStringList> csvStringList = importAsQStringList(filePath);
     auto csvStringListToQJsonArrayFunc = std::bind(CSVImporter::csvStringListToQJsonArray, std::placeholders::_1, fileMap);
-    QJsonArray csvJsonArray = QtConcurrent::blockingMappedReduced(csvStringList, csvStringListToQJsonArrayFunc, QJsonArray::append);
+    QJsonArray csvJsonArray = QtConcurrent::blockingMappedReduced(csvStringList, csvStringListToQJsonArrayFunc, &QJsonArray::append);
     csvStringList.clear();
 
     return csvJsonArray;

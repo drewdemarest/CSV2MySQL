@@ -30,7 +30,8 @@ SOURCES += \
     importer/csvimporter.cpp \
     json2sqlite/json2sqlite.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    entity/order/orderfactory.cpp
 
 HEADERS += \
     entity/order/order.h \
@@ -38,7 +39,8 @@ HEADERS += \
     importer/charliescsvimporter.h \
     importer/csvimporter.h \
     json2sqlite/json2sqlite.h \
-    mainwindow.h
+    mainwindow.h \
+    entity/order/orderfactory.h
 
 FORMS += \
         mainwindow.ui

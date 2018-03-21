@@ -10,6 +10,7 @@ public:
     Order();
     Order(const QVariantMap &information);
     QVariant getInvoiceNumber();
+
     void addInformation(const QVariantMap &information);
     void setDateFormat(const QString &dateFormat);
     void setDateTimeFormat(const QString &dateTimeFormat);
@@ -20,29 +21,14 @@ public:
     QStringList neededKeys();
     bool informationValid();
     void calculateAnalysisData();
-    QStringList getCSVStringListOrder();
+
+    static QStringList getCSVStringListOrder();
 
 private:
     QString stripQuotes(const QString &data);
 
     QString dateFormat_ = "M/d/yyyy";
     QString dateTimeFormat_ = "M/d/yyyyh:mm:ss";
-
-    QStringList csvStringListOrder { "invoiceNumber",
-                                     "customerNumber",
-                                     "customerName",
-                                     "masterCustomerNumber",
-                                     "routeKey",
-                                     "stopNumber",
-                                     "invoiceDate",
-                                     "orderDateTime",
-                                     "pieces",
-                                     "weight",
-                                     "cube",
-                                     "netSales",
-                                     "cost",
-                                     "profit",
-                                     "dayOfWeekInt"};
 
     QVariantMap information_ {{"invoiceNumber", QVariant()},
                               {"customerNumber", QVariant()},

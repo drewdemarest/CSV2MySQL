@@ -27,11 +27,11 @@ void Order::addInformation(const QVariantMap &information)
 QString Order::toCSVString()
 {
     QStringList csvStringList;
-    for(auto dataKey: csvStringListOrder)
+    for(auto dataKey: Order::getCSVStringListOrder())
         if(information_.contains(dataKey))
             csvStringList.append(stripQuotes(information_[dataKey].toString()));
 
-    for(auto dataKey: csvStringListOrder)
+    for(auto dataKey: Order::getCSVStringListOrder())
         if(analysisInformation_.contains(dataKey))
             csvStringList.append(stripQuotes(analysisInformation_[dataKey].toString()));
 
@@ -122,8 +122,24 @@ void Order::calculateAnalysisData()
 }
 
 QStringList Order::getCSVStringListOrder()
-{
-    return csvStringListOrder;
+{     
+        QStringList csvStringListOrder_
+        { "invoiceNumber",
+        "customerNumber",
+        "customerName",
+        "masterCustomerNumber",
+        "routeKey",
+        "stopNumber",
+        "invoiceDate",
+        "orderDateTime",
+        "pieces",
+        "weight",
+        "cube",
+        "netSales",
+        "cost",
+        "profit",
+        "dayOfWeekInt"};
+        return csvStringListOrder_;
 }
 
 QString Order::stripQuotes(const QString &data)
