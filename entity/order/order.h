@@ -9,7 +9,7 @@ class Order
 public:
     Order();
     Order(const QVariantMap &information);
-    QVariant getInvoiceNumber();
+    int getInvoiceNumber();
 
     void addInformation(const QVariantMap &information);
     void setDateFormat(const QString &dateFormat);

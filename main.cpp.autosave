@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     std::sort(orderInvoiceNums.begin(), orderInvoiceNums.end());
     std::sort(order2InvoiceNums.begin(), order2InvoiceNums.end());
     std::set_intersection(orderInvoiceNums.begin(), orderInvoiceNums.end(), order2InvoiceNums.begin(), order2InvoiceNums.end(), std::back_inserter(commonInvoiceNums));
-
+    
     qDebug() << commonInvoiceNums.size();
 
 

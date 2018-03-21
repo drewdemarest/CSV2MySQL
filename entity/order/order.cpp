@@ -9,9 +9,9 @@ Order::Order(const QVariantMap &information)
     addInformation(information);
 }
 
-QVariant Order::getInvoiceNumber()
+int Order::getInvoiceNumber()
 {
-    return information_["invoiceNumber"];
+    return information_["invoiceNumber"].toInt();
 }
 
 void Order::addInformation(const QVariantMap &information)
