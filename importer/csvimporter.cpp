@@ -56,6 +56,16 @@ QJsonArray CSVImporter::importAsQJsonArray(const QMap<QString, int> &fileMap, co
     return csvJsonArray;
 }
 
+QList<QPair<int, QVariantMap>> CSVImporter::importAsPair(const QMap<QString, int> &fileMap, const QString &filePath, const QString &keyIdentifier)
+{
+    QList<QStringList> csvStringList = importAsQStringList(filePath);
+    auto csvStringListToPair = std::bind(CSVImporter::csvStringListToCSVPair, std::placeholders::_1, fileMap, keyIdentifier);
+    QList<QPair<int, QVariantMap>> csvPairList = QtConcurrent::blockingMapped(csvStringList, csvStringListToPair);
+    csvStringList.clear();
+
+    return csvPairList;
+}
+
 QStringList CSVImporter::parseCSVLine(const QByteArray &csvLine)
 {
     QRegularExpression csvParse("(\"([^\"]*)\"|[^,]*)(,|$)");
@@ -86,6 +96,24 @@ QVariantMap CSVImporter::csvStringListToCSVVariantMap(const QStringList &csvStri
         csvMappedData[key] = csvStringList[columnMap[key]];
     return csvMappedData;
 }
+
+QPair<int, QVariantMap> CSVImporter::csvStringListToCSVPair(const QStringList &csvStringList, const QMap<QString, int> &columnMap, const QString &keyIdentifier)
+{
+    QVariantMap csvMappedData;
+
+    if(columnMap.keys().size() > csvStringList.size())
+    {
+        qDebug() << "Error, more keys in csv column map than there are strings"
+                    " in string list. Returning empty QVariantMap";
+        return QPair<int, QVariantMap>();
+    }
+
+    for(auto key:columnMap.keys())
+        csvMappedData[key] = csvStringList[columnMap[key]];
+
+    return QPair<int, QVariantMap>(csvMappedData[keyIdentifier].toInt(), csvMappedData);
+}
+
 
 QJsonObject CSVImporter::csvStringListToQJsonArray(const QStringList &csvStringList, const QMap<QString, int> &columnMap)
 {

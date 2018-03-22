@@ -5,10 +5,15 @@ OrderFactory::OrderFactory(QObject *parent) : QObject(parent)
 
 }
 
-OrderMap OrderFactory::makeOrders(const QList<QVariantMap> &vMap1, const QList<QVariantMap> &vMap2)
+OrderMap OrderFactory::makeOrders(const QList<QVariantMap> &vMap)
 {
-    OrderMap oMap1 = QtConcurrent::blockingMappedReduced(vMap1, OrderFactory::makeOrderFromVarMap, OrderFactory::reduce);
-    OrderMap oMap2 = QtConcurrent::blockingMappedReduced(vMap2, OrderFactory::makeOrderFromVarMap, OrderFactory::reduce);
+    return QtConcurrent::blockingMappedReduced(vMap, OrderFactory::makeOrderFromVarMap, OrderFactory::reduce);
+}
+
+OrderMap OrderFactory::addToOrders(const OrderMap &oMap, const QList<QVariantMap> &vMap)
+{
+    OrderMap oMap1 = oMap;
+    OrderMap oMap2 = QtConcurrent::blockingMappedReduced(vMap, OrderFactory::makeOrderFromVarMap, OrderFactory::reduce);
 
     QList<int> keys = oMap1.keys();
     keys.append(oMap2.keys());
@@ -27,11 +32,6 @@ OrderMap OrderFactory::makeOrders(const QList<QVariantMap> &vMap1, const QList<Q
             oMap1.remove(key);
 
     return oMap1;
-}
-
-OrderMap OrderFactory::addToOrders(const OrderMap &oMap, const QVariantMap &vMap)
-{
-
 }
 
 OrderMap OrderFactory::makeOrderFromVarMap(const QVariantMap &vMap)

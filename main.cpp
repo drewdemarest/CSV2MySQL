@@ -14,11 +14,25 @@ int main(int argc, char *argv[])
 
     CharliesCSVImporter importer;
     importer.setCSVPath(QCoreApplication::applicationDirPath() + "/orderTrackingHistory.csv");
-    QList<QVariantMap> vMapImport1 = importer.importCharliesCSVAsQVariantMap(CharliesCSVImporter::reportTypes::OrderTrackingHistory);
-    importer.setCSVPath(QCoreApplication::applicationDirPath() + "/routeProfitabilityDetail.csv");
-    QList<QVariantMap> vMapImport2 = importer.importCharliesCSVAsQVariantMap(CharliesCSVImporter::reportTypes::RouteProfitability);
-    OrderMap oMap = OrderFactory::makeOrders(vMapImport1, vMapImport2);
-    qDebug() << oMap.size();
+    QList<QPair<int, QVariantMap>> pairList = importer.importCharliesCSVAsPair(CharliesCSVImporter::reportTypes::OrderTrackingHistory);
+
+    QMap<int, Order> orderMap;
+    for(auto pair: pairList)
+    {
+        orderMap[pair.first] = pair.second;
+    }
+
+
+//    CharliesCSVImporter importer;
+//    importer.setCSVPath(QCoreApplication::applicationDirPath() + "/orderTrackingHistory.csv");
+
+//    OrderMap oMap = OrderFactory::makeOrders(importer.importCharliesCSVAsQVariantMap(CharliesCSVImporter::reportTypes::OrderTrackingHistory));
+
+//    importer.setCSVPath(QCoreApplication::applicationDirPath() + "/routeProfitabilityDetail.csv");
+
+//    oMap = OrderFactory::addToOrders(oMap, importer.importCharliesCSVAsQVariantMap(CharliesCSVImporter::reportTypes::RouteProfitability));
+
+    qDebug() << orderMap.size();
 
     return a.exec();
 }

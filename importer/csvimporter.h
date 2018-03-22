@@ -20,6 +20,7 @@ public:
     static QList<QStringList> importAsQStringList(const QString &filePath);
     static QList<QVariantMap> importAsQVariantMap(const QMap<QString, int> &fileMap, const QString &filePath);
     static QJsonArray importAsQJsonArray(const QMap<QString, int> &fileMap, const QString &filePath);
+    static QList<QPair<int, QVariantMap>> importAsPair(const QMap<QString, int> &fileMap, const QString &filePath, const QString &keyIdentifier);
 
 protected:
     QString csvPath_;
@@ -28,6 +29,7 @@ private:
     static QStringList parseCSVLine(const QByteArray &csvLine);
     static QVariantMap csvStringListToCSVVariantMap(const QStringList &csvStringList, const QMap<QString, int> &columnMap);
     static QJsonObject csvStringListToQJsonArray(const QStringList &csvStringList, const QMap<QString, int> &columnMap);
+    static QPair<int, QVariantMap> csvStringListToCSVPair(const QStringList &csvStringList, const QMap<QString, int> &columnMap, const QString &keyIdentifier);
 
 signals:
     void percentComplete(int progress);

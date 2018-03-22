@@ -15,10 +15,13 @@ public:
     explicit CharliesCSVImporter();
 
     QJsonArray importCharliesCSVAsQJsonArray(CharliesCSVImporter::reportTypes);
-    QJsonArray importCharliesCSVAsQJsonArray(CharliesCSVImporter::reportTypes, const QString &filePath);
+    QJsonArray importCharliesCSVAsQJsonArray(CharliesCSVImporter::reportTypes, const QString &csvPath);
 
     QList<QVariantMap> importCharliesCSVAsQVariantMap(CharliesCSVImporter::reportTypes);
-    QList<QVariantMap> importCharliesCSVAsQVariantMap(CharliesCSVImporter::reportTypes, const QString &filePath);
+    QList<QVariantMap> importCharliesCSVAsQVariantMap(CharliesCSVImporter::reportTypes, const QString &csvPath);
+
+    QList<QPair<int, QVariantMap> > importCharliesCSVAsPair(CharliesCSVImporter::reportTypes);
+    QList<QPair<int, QVariantMap> > importCharliesCSVAsPair(CharliesCSVImporter::reportTypes, const QString &csvPath);
 
 private:
     QMap<QString, int> orderTrackingCSVMap_ {{"cdl", int(0)},
