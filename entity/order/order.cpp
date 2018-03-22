@@ -9,7 +9,7 @@ Order::Order(const QVariantMap &information)
     addInformation(information);
 }
 
-int Order::getInvoiceNumber()
+ int Order::getInvoiceNumber() const
 {
     return information_["invoiceNumber"].toInt();
 }
@@ -17,11 +17,16 @@ int Order::getInvoiceNumber()
 void Order::addInformation(const QVariantMap &information)
 {
     for(auto key:information.keys())
-        if(information_.contains(key))
+        if(information_.contains(key) && !information[key].isNull())
             information_[key] = information[key];
 
     if(information.contains("orderDate") && information.contains("orderTime"))
         information_["orderDateTime"] = QDateTime::fromString(information["orderDate"].toString() + information["orderTime"].toString(), dateTimeFormat_);
+}
+
+ QVariantMap Order::extractInformation() const
+{
+    return information_;
 }
 
 QString Order::toCSVString()

@@ -2,10 +2,36 @@
 #include "importer/charliescsvimporter.h"
 #include "entity/order/order.h"
 #include <QApplication>
+#include <QMutex>
 
-Order makeOrderFromVarMap(const QVariantMap &vMap)
+typedef QMap<int, Order> OrderMap;
+
+void combineOrders(const Order &o, QMap<int, Order> &oMap)
 {
-    return Order(vMap);
+        if(oMap.contains(o.getInvoiceNumber()))
+        {
+            qDebug() << o.getInvoiceNumber();
+            oMap[o.getInvoiceNumber()].addInformation(o.extractInformation());
+        }
+}
+
+
+OrderMap makeOrderFromVarMap(const QVariantMap &vMap)
+{
+    OrderMap oMap;
+    Order order = Order(vMap);
+    oMap[order.getInvoiceNumber()] = order;
+    return oMap;
+}
+
+void reduce(OrderMap &result, const OrderMap &oMap)
+{
+    QMapIterator<int, Order> i(oMap);
+    while(i.hasNext())
+    {
+        i.next();
+        result[i.key()] = i.value();
+    }
 }
 
 int getInvoiceNumFromOrder(Order o)
@@ -22,30 +48,32 @@ int main(int argc, char *argv[])
     CharliesCSVImporter importer;
     importer.setCSVPath(QCoreApplication::applicationDirPath() + "/orderTrackingHistory.csv");
 
-    QList<QVariantMap> bok = importer.importCharliesCSVAsQVariantMap(CharliesCSVImporter::reportTypes::OrderTrackingHistory);
-    QList<Order> orders = QtConcurrent::blockingMapped(bok, makeOrderFromVarMap);
+    QList<QVariantMap> vMapImport = importer.importCharliesCSVAsQVariantMap(CharliesCSVImporter::reportTypes::OrderTrackingHistory);
+    OrderMap oMap = QtConcurrent::blockingMappedReduced(vMapImport, makeOrderFromVarMap, reduce);
+
     importer.setCSVPath(QCoreApplication::applicationDirPath() + "/routeProfitabilityDetail.csv");
-    bok.clear();
-    bok = importer.importCharliesCSVAsQVariantMap(CharliesCSVImporter::reportTypes::RouteProfitability);
-    QList<Order> orders2 = QtConcurrent::blockingMapped(bok, makeOrderFromVarMap);
-    QList<int> orderInvoiceNums = QtConcurrent::blockingMapped(orders, getInvoiceNumFromOrder);
-    QList<int> order2InvoiceNums = QtConcurrent::blockingMapped(orders2, getInvoiceNumFromOrder);
-    QList<int> commonInvoiceNums;
-    std::sort(orderInvoiceNums.begin(), orderInvoiceNums.end());
-    std::sort(order2InvoiceNums.begin(), order2InvoiceNums.end());
-    std::set_intersection(orderInvoiceNums.begin(), orderInvoiceNums.end(), order2InvoiceNums.begin(), order2InvoiceNums.end(), std::back_inserter(commonInvoiceNums));
+    vMapImport.clear();
+    vMapImport = importer.importCharliesCSVAsQVariantMap(CharliesCSVImporter::reportTypes::RouteProfitability);
+    OrderMap oMap2 = QtConcurrent::blockingMappedReduced(vMapImport, makeOrderFromVarMap, reduce);
 
-    qDebug() << commonInvoiceNums.size();
+    QList<int> keys = oMap.keys();
+    keys.append(oMap2.keys());
+    QSet<int> sharedKeys = keys.toSet();
 
+    for(auto key: sharedKeys)
+    {
+        oMap[key].addInformation(oMap2[key].extractInformation());
+        oMap2.remove(key);
+    }
 
-    //QJsonArray bok = importer.importCharliesCSVAsQJsonArray(CharliesCSVImporter::reportTypes::OrderTrackingHistory);
+    oMap2.clear();
 
-    //importer.saveArray(QCoreApplication::applicationDirPath() + "/orderTrackingHistory.db", "orderTrackingHistory", "invoiceNumber", bok);
-    qDebug() << bok.size() << bok[10];
-    qDebug() << orders[10].neededKeys();
-    qDebug() << orders2[10].neededKeys();
+    for(auto key:oMap.keys())
+        if(!oMap[key].neededKeys().isEmpty())
+            oMap.remove(key);
 
-    // bok = QJsonArray();
-
+    qDebug() << oMap.size();
+    qDebug() << oMap.begin().value().neededKeys();
+    qDebug() << oMap2.size();
     return a.exec();
 }
