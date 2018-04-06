@@ -268,10 +268,14 @@ QString OrderSQLite::createValueTuple(QStringList csvRow, const QStringList &sql
             continue;
         }
         else
+        {
             if(sqliteTypes.at(i) == "TEXT" || sqliteTypes.at(i) == "BLOB")
                 csvRow[i] = "\"" + csvRow[i] + "\"";
-            if(sqliteTypes.at(i).contains("INTEGER"))
-                csvRow[i] = csvRow[i].remove(QRegularExpression("[a-zA-Z]"));
+            if(sqliteTypes.at(i).contains("INTEGER") || sqliteTypes.at(i).contains("REAL"))
+            {
+                csvRow[i] = csvRow[i].remove(QRegularExpression("[a-zA-Z,]"));
+            }
+        }
 
     }
 
@@ -284,6 +288,9 @@ QStringList OrderSQLite::parseCSVLine(const QByteArray &csvLine)
     QRegularExpression csvParse("(?:,|\\n|^)(\"(?:(?:\"\")*[^\"]*)*\"|[^\",\\n]*|(?:\\n|$))");
     QRegularExpressionMatchIterator i = csvParse.globalMatch(csvLineSimpl);
     QStringList matchList;
+
+    if(csvLine.at(0) == ',')
+        matchList.append(QString());
 
     while (i.hasNext()) {
         QRegularExpressionMatch match = i.next();
