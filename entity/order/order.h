@@ -19,16 +19,19 @@ public:
 
     QStringList necessaryKeys();
     QStringList neededKeys();
+    QStringList completedKeys();
     bool informationValid();
     void calculateAnalysisData();
 
     static QStringList getCSVStringListOrder();
+    static QStringList getKeyListInOrder();
+    static QMap<QString,QString> getDBTableInfo();
 
 private:
     QString stripQuotes(const QString &data);
 
     QString dateFormat_ = "M/d/yyyy";
-    QString dateTimeFormat_ = "M/d/yyyyh:mm:ss";
+    QString dateTimeFormat_ = "MM/dd/yyhh:mm:ss";
 
     QVariantMap information_ {{"invoiceNumber", QVariant()},
                               {"customerNumber", QVariant()},

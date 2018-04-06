@@ -21,7 +21,7 @@ void Order::addInformation(const QVariantMap &information)
             information_[key] = information[key];
 
     if(information.contains("orderDate") && information.contains("orderTime"))
-        information_["orderDateTime"] = QDateTime::fromString(information["orderDate"].toString() + information["orderTime"].toString(), dateTimeFormat_);
+        information_["orderDateTime"] = QDateTime::fromString(information["orderDate"].toString() + information["orderTime"].toString(), dateTimeFormat_).addYears(100);
 }
 
  QVariantMap Order::extractInformation() const
@@ -75,12 +75,12 @@ bool Order::informationValid()
         if(!orderDate.isValid())
             return false;
         information_["invoiceDate"] = QVariant(orderDate);
-        //qDebug() << information_["orderDate"].toDate();
     }
 
     if(!information_["orderDateTime"].canConvert<QString>())
     {
         qDebug() << "failed order datetime" << information_["orderDateTime"];
+        qDebug() << information_["orderDateTime"];
         return false;
     }
     else
@@ -91,12 +91,8 @@ bool Order::informationValid()
             qDebug() << "failed datetime" << information_["orderDateTime"];
             return false;
         }
-
-//        qDebug() << information_["invoiceDateTime"].toString();
-//        qDebug() << invoiceDateTime;
-//        qDebug() << QDateTime::fromString(information_["invoiceDateTime"].toString(), dateTimeFormat_);
-
-//        information_["invoiceDateTime"] = invoiceDateTime;
+        qDebug() << orderDateTime;
+        information_["orderDateTime"] = orderDateTime;
 
     }
 
@@ -142,9 +138,33 @@ QStringList Order::getCSVStringListOrder()
         "cube",
         "netSales",
         "cost",
-        "profit",
-        "dayOfWeekInt"};
+        "profit"};
         return csvStringListOrder_;
+}
+
+QStringList Order::getKeyListInOrder()
+{
+    return Order::getCSVStringListOrder();
+}
+
+QMap<QString, QString> Order::getDBTableInfo()
+{
+    return QMap<QString, QString> {
+        {"invoiceNumber", "INTEGER PRIMARY KEY"},
+        {"customerNumber", "INTEGER"},
+        {"customerName", "TEXT"},
+        {"masterCustomerNumber", "INTEGER"},
+        {"routeKey", "TEXT"},
+        {"stopNumber", "INTEGER"},
+        {"invoiceDate", "TEXT"},
+        {"orderDateTime", "TEXT"},
+        {"pieces", "REAL"},
+        {"weight", "REAL"},
+        {"cube", "REAL"},
+        {"netSales", "REAL"},
+        {"cost", "REAL"},
+        {"profit", "REAL"}
+    };
 }
 
 QString Order::stripQuotes(const QString &data)
@@ -158,6 +178,16 @@ QStringList Order::neededKeys()
     QStringList needed;
     for(auto key:information_.keys())
         if(information_[key].isNull())
+            needed << key;
+
+    return needed;
+}
+
+QStringList Order::completedKeys()
+{
+    QStringList needed;
+    for(auto key:information_.keys())
+        if(!information_[key].isNull())
             needed << key;
 
     return needed;
