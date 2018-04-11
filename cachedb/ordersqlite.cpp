@@ -286,6 +286,7 @@ bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, 
         QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", "orders");
         database.setDatabaseName(dbPath_);
 
+        qDebug() << database.isOpen();
         if(!database.open())
         {
             qDebug() << "db failed to load in OrderSQLite::makeInitalDatabase";
@@ -293,6 +294,26 @@ bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, 
         }
         database.transaction();
         QSqlQuery query(database);
+
+        query.prepare("PRAGMA journal_mode = OFF");
+        success = query.exec();
+        if(!success)
+        {
+            qDebug() << query.lastError();
+            //qDebug() << queryString;
+        }
+
+        query.prepare("PRAGMA temp_store = MEMORY");
+        success = query.exec();
+        if(!success)
+        {
+            qDebug() << query.lastError();
+            //qDebug() << queryString;
+        }
+       query.clear();
+
+
+
         query.prepare(queryString);
         success = query.exec();
 
