@@ -9,6 +9,8 @@
 #include <QApplication>
 #include <QSqlError>
 #include "entity/order/order.h"
+#include <malloc.h>
+//#include <sqlite3.h>
 
 struct DataInfo
 {
@@ -53,8 +55,7 @@ class OrderSQLite : public QObject
 public:
     explicit OrderSQLite(const QString &dbPath, QObject *parent = nullptr);
     bool doesDatabaseExist() const;
-    QList<QStringList> importCSVtoSQLite
-    (const DataInfoMap  &csvFormat,
+    QVector<QString> importCSVtoSQLite(const DataInfoMap  &csvFormat,
      const QString      &tableName,
      const bool         hasHeaders,
      const QString      &filePath,
@@ -171,13 +172,14 @@ private:
     QString dbPath_;
 
     bool makeOrderDB();
-    bool saveToDB(const QString &tableName, const DataInfoMap &format, const QList<QStringList> &linesIn);
+    bool saveToDB(const QString &tableName, const DataInfoMap &format, const QVector<QString> &linesIn);
     QString createNewTable(const QString &tableName, const DataInfoMap &format);
-    QString insertOrIgnoreInto(const QString &tableName, const DataInfoMap &format, const QList<QStringList> &csvRows);
+    QString insertOrIgnoreInto(const QString &tableName, const DataInfoMap &format, const QVector<QVector<QString> > &csvRows);
 
     //Static functions for threading.
-    static QString createValueTuple(QStringList csvRow, const QStringList &sqliteTypes);
-    static QStringList parseCSVLine(const QByteArray &csvLine);
+    static QString createValueTuple(QVector<QString> csvLine, const QVector<QString> &sqliteTypes);
+    static QVector<QString> parseCSVLine(const QString &csvLine);
+    static QString csvLineToValueString(const QString &csvLine, const QVector<QString> &sqliteTypes);
 
     TableInfoMap knownFormats_ = {{"OrderTrackingCSV",          formatOrderTrackingCSV_},
                                   {"RouteProfitabilityCSV",     formatRouteProfitabilityCSV_},
