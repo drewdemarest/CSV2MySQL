@@ -68,7 +68,7 @@ public:
     (const QDate &minOrderDate, const QDate &maxOrderDate) const;
 
     TableInfoMap getKnownFormats() const;
-    bool addFormat(const QString &tableName, const DataInfoMap &dim);
+    void addFormat(const QString &tableName, const DataInfoMap &dim);
     bool populateOrders() const;
 
     const DataInfoMap formatOrderTrackingCSV_
@@ -174,7 +174,7 @@ private:
     bool makeOrderDB();
     bool saveToDB(const QString &tableName, const DataInfoMap &format, const QVector<QString> &linesIn);
     QString createNewTable(const QString &tableName, const DataInfoMap &format);
-    QString insertOrIgnoreInto(const QString &tableName, const DataInfoMap &format, const QVector<QVector<QString> > &csvRows);
+    QString insertOrIgnoreInto(const QString &tableName, const DataInfoMap &format, const QVector<QString> &csvRows);
 
     //Static functions for threading.
     static QString createValueTuple(QVector<QString> csvLine, const QVector<QString> &sqliteTypes);

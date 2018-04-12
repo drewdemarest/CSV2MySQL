@@ -1,13 +1,13 @@
 #include "ordersqlite.h"
 
-static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
-    int i;
-    for(i = 0; i<argc; i++) {
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-    printf("\n");
-    return 0;
-}
+//static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
+//    int i;
+//    for(i = 0; i<argc; i++) {
+//        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+//    }
+//    printf("\n");
+//    return 0;
+//}
 
 OrderSQLite::OrderSQLite(const QString &dbPath, QObject *parent) : QObject(parent)
 {
@@ -26,22 +26,22 @@ bool OrderSQLite::doesDatabaseExist() const
         return false;
 }
 
-QList<QVariantMap> OrderSQLite::getOrdersFromDB(const int minInvoiceNum, const int maxInvoiceNum) const
-{
-    return QList<QVariantMap>();
-}
+//QList<QVariantMap> OrderSQLite::getOrdersFromDB(const int minInvoiceNum, const int maxInvoiceNum) const
+//{
+//    return QList<QVariantMap>();
+//}
 
-QList<QVariantMap> OrderSQLite::getOrdersFromDB(const QDate &minOrderDate, const QDate &maxOrderDate) const
-{
-    return QList<QVariantMap>();
-}
+//QList<QVariantMap> OrderSQLite::getOrdersFromDB(const QDate &minOrderDate, const QDate &maxOrderDate) const
+//{
+//    return QList<QVariantMap>();
+//}
 
 TableInfoMap OrderSQLite::getKnownFormats() const
 {
     return knownFormats_;
 }
 
-bool OrderSQLite::addFormat(const QString &tableName, const DataInfoMap &dim)
+void OrderSQLite::addFormat(const QString &tableName, const DataInfoMap &dim)
 {
     knownFormats_[tableName] = dim;
 }
@@ -89,13 +89,13 @@ bool OrderSQLite::populateOrders() const
     if(!success)
         qDebug() << query.lastError();
 
-//    while(query.next()){
-//        //qDebug() << query.record().count();
-//        QStringList queryResult;
-//        for(int j = 0; j < query.record().count(); ++j)
-//            queryResult.append(query.value(j).toString());
-//        //qDebug() << queryResult;
-//    }
+    //    while(query.next()){
+    //        //qDebug() << query.record().count();
+    //        QStringList queryResult;
+    //        for(int j = 0; j < query.record().count(); ++j)
+    //            queryResult.append(query.value(j).toString());
+    //        //qDebug() << queryResult;
+    //    }
 
     query.clear();
     database.close();
@@ -113,37 +113,36 @@ bool OrderSQLite::makeOrderDB()
             << "PRAGMA cache_Size=10000";
 
     {
-    QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", "orders");
-    database.setDatabaseName(dbPath_);
+        QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", "orders");
+        database.setDatabaseName(dbPath_);
 
-    if(!database.open())
-    {
-        qDebug() << "db failed to load in OrderSQLite::makeInitalDatabase";
-        return false;
-    }
+        if(!database.open())
+        {
+            qDebug() << "db failed to load in OrderSQLite::makeInitalDatabase";
+            return false;
+        }
 
-    QSqlQuery query(database);
-    for(auto key: knownFormats_.keys())
-    {
+        QSqlQuery query(database);
+        for(auto key: knownFormats_.keys())
+        {
+            query.clear();
+            query.prepare(createNewTable(key, knownFormats_[key]));
+            success = query.exec();
+
+
+            if(!success)
+                qDebug() << query.lastError();
+        }
+
+        for(auto pragma: pragmas)
+        {
+            query.clear();
+            query.prepare(pragma);
+            success = query.exec();
+        }
+
         query.clear();
-        query.prepare(createNewTable(key, knownFormats_[key]));
-        success = query.exec();
-
-
-        if(!success)
-            qDebug() << query.lastError();
-    }
-
-    for(auto pragma: pragmas)
-    {
-        query.clear();
-        query.prepare(pragma);
-        success = query.exec();
-    }
-
-    query.clear();
-
-    database.close();
+        database.close();
     }
     QSqlDatabase::removeDatabase("orders");
     return success;
@@ -151,7 +150,8 @@ bool OrderSQLite::makeOrderDB()
 
 QString OrderSQLite::createNewTable(const QString &tableName, const DataInfoMap &format)
 {
-    QString queryString = "CREATE TABLE "+tableName+"(";
+    QString queryString; queryString.reserve(1000);
+    queryString.append("CREATE TABLE "+tableName+"(");
     QStringList sqliteColumns = QStringList::fromVector(QVector<QString>(format.size()));
 
     //Use format keys to ensure that columns are in the correct sequence.
@@ -168,10 +168,10 @@ QString OrderSQLite::createNewTable(const QString &tableName, const DataInfoMap 
 
 
 QVector<QString> OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
-                                                  const QString &tableName,
-                                                  const bool hasHeaders,
-                                                  const QString &filePath,
-                                                  const int &chunkSize)
+                                                const QString &tableName,
+                                                const bool hasHeaders,
+                                                const QString &filePath,
+                                                const int &chunkSize)
 {
     QFile *csvFile = new QFile(filePath);
     QTextStream csvFileStream(csvFile);
@@ -190,12 +190,12 @@ QVector<QString> OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
         return QVector<QString>();
     }
 
-//Skip headers
+    //Skip headers
     if(hasHeaders && !csvFileStream.atEnd())
         csvFileStream.readLine();
 
 
-// Chunks
+    // Chunks
     int i = 0;
     while(!csvFileStream.atEnd())
     {
@@ -212,7 +212,7 @@ QVector<QString> OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
         ++i;
     }
 
-// Computes remaining lineVec.
+    // Computes remaining lineVec.
     qDebug() << i;
     csvStringVecs = QtConcurrent::blockingMapped(lineVec.mid(0, i), csvLineToValueStringFunc);
     lineVec.clear();
@@ -221,7 +221,7 @@ QVector<QString> OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
     csvStringVecs.clear();
     csvStringVecs.shrink_to_fit();
 
-// End Chunks
+    // End Chunks
 
     lineVec.clear();
     lineVec.shrink_to_fit();
@@ -250,7 +250,6 @@ bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, 
 
     queryString.append(QStringList::fromVector(csvColumns).join(", ") + ") VALUES ");
 
-
     for(int i = 0; i < linesIn.size(); ++i)
     {
         if(i == linesIn.size() - 1)
@@ -266,7 +265,6 @@ bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, 
         QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", "orders");
         database.setDatabaseName(dbPath_);
 
-        qDebug() << database.isOpen();
         if(!database.open())
         {
             qDebug() << "db failed to load in OrderSQLite::makeInitalDatabase";
@@ -274,32 +272,12 @@ bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, 
         }
         database.transaction();
         QSqlQuery query(database);
-
-        query.prepare("PRAGMA journal_mode = OFF");
-        success = query.exec();
-        if(!success)
-        {
-            qDebug() << query.lastError();
-            //qDebug() << queryString;
-        }
-
-        query.prepare("PRAGMA temp_store = MEMORY");
-        success = query.exec();
-        if(!success)
-        {
-            qDebug() << query.lastError();
-            //qDebug() << queryString;
-        }
-       query.clear();
-
-
-
         query.prepare(queryString);
         success = query.exec();
 
         if(!success)
         {
-            //qDebug() << query.lastError();
+            qDebug() << query.lastError();
             //qDebug() << queryString;
         }
         database.commit();
@@ -316,107 +294,6 @@ bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, 
     queryString.clear();
     queryString.squeeze();
     return success;
-}
-
-QString OrderSQLite::insertOrIgnoreInto(const QString &tableName, const DataInfoMap &format, const QVector<QVector<QString>> &linesIn)
-{
-    //Initialize a list to size of format.
-    QVector<QString> valueTuples;
-    qDebug() << linesIn.size();
-    //QStringList csvColumns = QStringList::fromVector(QVector<QString>(format.size()));
-    QVector<QString> csvColumns(format.size());
-    //QStringList sqliteTypes = QStringList::fromVector(QVector<QString>(format.size()));
-    QVector<QString> sqliteTypes(format.size());
-    QVector<QString> tempVec;
-
-    QString queryString;
-    queryString.reserve(20000000);
-
-    queryString.append("INSERT OR IGNORE INTO "+tableName+"(");
-
-    for(auto key: format.keys())
-    {
-        csvColumns[format[key].csvColumn_] = key;
-        sqliteTypes[format[key].csvColumn_] = format[key].sqliteType_;
-    }
-
-    queryString.append(QStringList::fromVector(csvColumns).join(", ") + ") VALUES ");
-
-    auto createValueTupleFunc = std::bind(OrderSQLite::createValueTuple, std::placeholders::_1, sqliteTypes);
-
-    valueTuples = QtConcurrent::blockingMapped(linesIn, createValueTupleFunc);
-    //valueTuples = QStringList::fromVector(tempVec);
-
-    for(int i = 0; i < valueTuples.size(); ++i)
-    {
-        if(i == valueTuples.size() - 1)
-        {
-            queryString.append(valueTuples[i]);
-            continue;
-        }
-        queryString.append(valueTuples[i] + ", ");
-    }
-
-   //queryString.append(valueTuples.join(", "));
-
-    qDebug() << queryString.size();
-    csvColumns.clear();
-    csvColumns.squeeze();
-    sqliteTypes.clear();
-    sqliteTypes.squeeze();
-    valueTuples.clear();
-    valueTuples.squeeze();
-    return queryString;
-}
-
-QString OrderSQLite::createValueTuple(QVector<QString> csvLine, const QVector<QString> &sqliteTypes)
-{
-//    if(sqliteTypes.size() != csvLine.size())
-//    {
-//        qDebug() << "Parse error, the CSV row is not in compliance with the SQLite table. Dropping this entry.";
-//        qDebug() << sqliteTypes << sqliteTypes.size();
-//        qDebug() << csvLine << csvLine.size();
-//        csvLine.clear();
-//        for(int i = 0; i < sqliteTypes.size(); ++i)
-//            csvLine << "NULL";
-//        qDebug() << csvLine.join(", ");
-//        return csvLine.join(", ");
-//    }
-
-
-    for(int i = 0; i < csvLine.size(); ++i)
-    {
-        if(csvLine[i].isEmpty())
-        {
-            csvLine[i] = "NULL";
-            continue;
-        }
-        else
-        {
-            if(sqliteTypes.at(i).contains("TEXT") || sqliteTypes.at(i).contains("BLOB"))
-                csvLine[i] = "\"" + csvLine[i] + "\"";
-            if(sqliteTypes.at(i).contains("INTEGER") || sqliteTypes.at(i).contains("REAL"))
-            {
-                csvLine[i] = csvLine[i].remove(QRegularExpression("[a-zA-Z,]"));
-            }
-        }
-
-    }
-    QString rtnString = "(";
-    for(int i = 0; i < csvLine.size(); ++i)
-    {
-        if(i == csvLine.size() - 1)
-        {
-            rtnString.append(csvLine[i] + ")");
-            continue;
-        }
-        rtnString.append(csvLine[i] + ", ");
-    }
-
-     //= QString("(" + csvLine.join(", ") + ")");
-    csvLine.clear();
-    csvLine.shrink_to_fit();
-    return rtnString;
 }
 
 QVector<QString> OrderSQLite::parseCSVLine(const QString &csvLine)
