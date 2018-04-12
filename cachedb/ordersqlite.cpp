@@ -47,7 +47,8 @@ bool OrderSQLite::addFormat(const QString &tableName, const DataInfoMap &dim)
 }
 
 bool OrderSQLite::populateOrders() const
-{
+{    //Scope to make sure everything is clean regarding DB connections.
+
     bool success;
     QSqlDatabase database;
     database = database.addDatabase("QSQLITE", "orders");
@@ -106,8 +107,13 @@ bool OrderSQLite::populateOrders() const
 bool OrderSQLite::makeOrderDB()
 {
     bool success;
-    QSqlDatabase database;
-    database = database.addDatabase("QSQLITE", "orders");
+    QStringList pragmas;
+    pragmas << "PRAGMA synchronous = OFF"
+            << "PRAGMA journal_mode = MEMORY"
+            << "PRAGMA cache_Size=10000";
+
+    {
+    QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", "orders");
     database.setDatabaseName(dbPath_);
 
     if(!database.open())
@@ -122,15 +128,24 @@ bool OrderSQLite::makeOrderDB()
         query.clear();
         query.prepare(createNewTable(key, knownFormats_[key]));
         success = query.exec();
+
+
         if(!success)
             qDebug() << query.lastError();
     }
 
+    for(auto pragma: pragmas)
+    {
+        query.clear();
+        query.prepare(pragma);
+        success = query.exec();
+    }
 
     query.clear();
+
     database.close();
-    database = QSqlDatabase();
-    database.removeDatabase("orders");
+    }
+    QSqlDatabase::removeDatabase("orders");
     return success;
 }
 
@@ -246,42 +261,7 @@ bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, 
         queryString.append(linesIn.at(i) + ", ");
     }
 
-
-//    int rc;
-//    sqlite3 *db;
-//    char *zErrMsg = 0;
-//    char *str;
-
-//    QByteArray temp = queryString.toLatin1();
-//    str = temp.data();
-//    /* Open database */
-//    rc = sqlite3_open("potato.db", &db);
-
-//    if( rc ) {
-//       fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-//       return(0);
-//    } else {
-//       fprintf(stdout, "Opened database successfully\n");
-//    }
-
-//    /* Create SQL statement */
-//    //sql = queryString.toStdString().c_str();
-
-//    /* Execute SQL statement */
-//    rc = sqlite3_exec(db, str, callback, 0, &zErrMsg);
-
-//    if( rc != SQLITE_OK ){
-//    fprintf(stderr, "SQL error: %s\n", zErrMsg);
-//       sqlite3_free(zErrMsg);
-//    } else {
-//       fprintf(stdout, "Table created successfully\n");
-//    }
-//    sqlite3_close(db);
-
-//------------------------------------
-//THIS IS THE DEMON
-    bool derp = true;
-    if(derp)
+    //Scope to make sure everything is clean regarding DB connections.
     {
         QSqlDatabase database = QSqlDatabase::addDatabase("QSQLITE", "orders");
         database.setDatabaseName(dbPath_);
@@ -327,8 +307,6 @@ bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, 
         query.clear();
         database.close();
     }
-//------------------------------------
-//Still has a memory leak?!
     QSqlDatabase::removeDatabase("orders");
 
     csvColumns.clear();
