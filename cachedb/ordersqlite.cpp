@@ -104,6 +104,8 @@ bool OrderSQLite::populateOrders() const
     return success;
 }
 
+
+
 bool OrderSQLite::makeOrderDB()
 {
     bool success;
@@ -177,10 +179,14 @@ QVector<QString> OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
     QTextStream csvFileStream(csvFile);
     QVector<QString> lineVec(chunkSize);
     QVector<QString> csvStringVecs;
+    QVector<DataInfo> sqliteTypes(csvFormat.size());
 
-    QVector<QString> sqliteTypes(csvFormat.size());
     for(auto key: csvFormat.keys())
-        sqliteTypes[csvFormat[key].csvColumn_] = csvFormat[key].sqliteType_;
+    {
+        sqliteTypes[csvFormat.value(key).getCSVColumn()] = csvFormat.value(key);
+        qDebug() << csvFormat.value(key).getCSVColumn();
+    }
+
 
     auto csvLineToValueStringFunc = std::bind(OrderSQLite::csvLineToValueString, std::placeholders::_1, sqliteTypes);
 
@@ -321,7 +327,7 @@ QVector<QString> OrderSQLite::parseCSVLine(const QString &csvLine)
     return matchVec;
 }
 
-QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<QString> &sqliteTypes)
+QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<DataInfo> &sqliteTypes)
 {
     QRegularExpression csvParse("(?:,|\\n|^)(\"(?:(?:\"\")*[^\"]*)*\"|[^\",\\n]*|(?:\\n|$))");
     QRegularExpressionMatchIterator i = csvParse.globalMatch(csvLine.simplified());
@@ -346,10 +352,26 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
             matchVec[matchCounter] = "NULL";
         else
         {
-            if(sqliteTypes.at(matchCounter) == QLatin1String("TEXT") || sqliteTypes.at(matchCounter) == QLatin1String("BLOB"))
+            //qDebug() << sqliteTypes.at(matchCounter).getSQLiteType();
+            if(sqliteTypes.at(matchCounter).isDate())
+            {
+                word = QDate::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addYears(sqliteTypes.at(matchCounter).getModYear()).toString("yyyy-MM-dd");
+            }
+
+            if(sqliteTypes.at(matchCounter).isTime())
+            {
+                word = QTime::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addSecs(sqliteTypes.at(matchCounter).getModSec()).toString("HH:mm:ss");
+            }
+
+            if(sqliteTypes.at(matchCounter).isDateTime())
+            {
+                word = QDateTime::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addSecs(sqliteTypes.at(matchCounter).getModSec()).toString("yyyy-MM-dd HH:MM:ss");
+            }
+
+            if(sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("TEXT") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("BLOB"))
                 matchVec[matchCounter] = "\"" + word + "\"";
 
-            if(sqliteTypes.at(matchCounter).contains("INTEGER") || sqliteTypes.at(matchCounter) == QLatin1String("REAL"))
+            if(sqliteTypes.at(matchCounter).getSQLiteType().contains("INTEGER") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("REAL"))
                 matchVec[matchCounter] = word.remove(QRegularExpression("[a-zA-Z,]"));
         }
         ++matchCounter;
@@ -367,7 +389,13 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
         valueString.append(matchVec[i] + ", ");
     }
 
+    //qDebug() << valueString;
     matchVec.clear();
     matchVec.squeeze();
     return valueString;
+}
+
+void OrderSQLite::generateRandyReport()
+{
+
 }

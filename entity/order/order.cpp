@@ -36,9 +36,9 @@ QString Order::toCSVString()
         if(information_.contains(dataKey))
             csvStringList.append(stripQuotes(information_[dataKey].toString()));
 
-    for(auto dataKey: Order::getCSVStringListOrder())
-        if(analysisInformation_.contains(dataKey))
-            csvStringList.append(stripQuotes(analysisInformation_[dataKey].toString()));
+//    for(auto dataKey: Order::getCSVStringListOrder())
+//        if(analysisInformation_.contains(dataKey))
+//            csvStringList.append(stripQuotes(analysisInformation_[dataKey].toString()));
 
 
     return csvStringList.join(",");
@@ -117,10 +117,10 @@ bool Order::informationValid()
     return true;
 }
 
-void Order::calculateAnalysisData()
-{
-    analysisInformation_["dayOfWeekInt"] = information_["invoiceDate"].toDate().dayOfWeek();
-}
+//void Order::calculateAnalysisData()
+//{
+//    analysisInformation_["dayOfWeekInt"] = information_["invoiceDate"].toDate().dayOfWeek();
+//}
 
 QStringList Order::getCSVStringListOrder()
 {     

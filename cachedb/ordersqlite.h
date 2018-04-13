@@ -8,30 +8,46 @@
 #include <QSqlRecord>
 #include <QApplication>
 #include <QSqlError>
-#include "entity/order/order.h"
+#include "entity/customer/customer.h"
 #include <malloc.h>
 //#include <sqlite3.h>
 
 struct DataInfo
 {
     DataInfo(){}
-    DataInfo(int csvColumn, int sqliteColumn, QString sqliteType)
+    DataInfo(int csvColumn, int sqliteColumn, QString sqliteType,
+             bool isDate=false, bool isTime=false, QString dateTimeFormat = QString(), qint64 modSec = 0, int modYear = 0)
     {
         csvColumn_ = csvColumn;
         sqliteColumn_ = sqliteColumn;
         sqliteType_ = sqliteType;
+        date_ = isDate;
+        time_ = isTime;
+        dateTimeFormat_ = dateTimeFormat;
+        modSec_  = modSec;
+        modYear_ = modYear;
+
+        if(date_ && time_)
+            dateTime_ = true;
+
     }
 
-    DataInfo operator=(const DataInfo &dbi) const
-    {
-        return DataInfo(dbi.csvColumn_, dbi.sqliteColumn_, dbi.sqliteType_);
-    }
+//    DataInfo operator=(const DataInfo &dbi) const
+//    {
+//        return DataInfo(dbi.csvColumn_, dbi.sqliteColumn_, dbi.sqliteType_, dbi.date_, dbi.time_, dbi.dateTimeFormat_, dbi.modSec_, dbi.modYear_);
+//    }
 
     bool operator==(const DataInfo &dbi) const
     {
         if(this->csvColumn_ == dbi.csvColumn_
         && this->sqliteColumn_ == dbi.sqliteColumn_
-        && this->sqliteType_ == dbi.sqliteType_)
+        && this->sqliteType_ == dbi.sqliteType_
+        && this->date_ == dbi.date_
+        && this->time_ == dbi.time_
+        && this->dateTime_ == dbi.dateTime_
+        && this->dateTimeFormat_ == dbi.dateTimeFormat_
+        && this->modSec_ == dbi.modSec_
+        && this->modYear_ == dbi.modYear_)
         {
             return true;
         }
@@ -41,9 +57,28 @@ struct DataInfo
         }
     }
 
+    bool date_ = false;
+    bool time_ = false;
+    bool dateTime_ = false;
+
+    qint64 modSec_ = 0;
+    int modYear_ = 0;
+
     int csvColumn_ = 0;
     int sqliteColumn_ = 0;
     QString sqliteType_ = QString();
+    QString dateTimeFormat_ = QString();
+
+    bool isDate()const{return date_;}
+    bool isTime()const{return time_;}
+    bool isDateTime()const{return dateTime_;}
+    int getCSVColumn()const{return csvColumn_;}
+    int getSQLiteColumn()const{return sqliteColumn_;}
+    QString getSQLiteType()const{return sqliteType_;}
+    QString getDateTimeFormat()const{return dateTimeFormat_;}
+    qint64 getModSec()const{return modSec_;}
+    int getModYear()const{return modYear_;}
+
 };
 
 typedef QMap<QString, DataInfo> DataInfoMap;
@@ -71,12 +106,14 @@ public:
     void addFormat(const QString &tableName, const DataInfoMap &dim);
     bool populateOrders() const;
 
+    QVector<Order> getOrdersForRoutes(const QDate &min,const QDate &max,const QVector<QString> &routes);
+
     const DataInfoMap formatOrderTrackingCSV_
     {{"cdl",                DataInfo(0,1,"INTEGER")},
     {"orderType",           DataInfo(1,2,"TEXT")},
-    {"orderDate",           DataInfo(2,3,"TEXT")},
-    {"invoiceDate",         DataInfo(3,4,"TEXT")},
-    {"orderTime",           DataInfo(4,5,"TEXT")},
+    {"orderDate",           DataInfo(2,3,"TEXT", true, false, "MM/dd/yy", 0, 100)},
+    {"invoiceDate",         DataInfo(3,4,"TEXT", true, false, "MM/dd/yy", 0, 100)},
+    {"orderTime",           DataInfo(4,5,"TEXT", false, true, "HH:mm:ss", 0, 0)},
     {"rep",                 DataInfo(5,6,"TEXT")},
     {"terms",               DataInfo(6,7,"TEXT")},
     {"customerNumber",      DataInfo(7,8,"INTEGER")},
@@ -98,7 +135,7 @@ public:
     {"customerNumber",          DataInfo(1,2, "INTEGER")},
     {"customerName",            DataInfo(2,3, "TEXT")},
     {"masterCustomerNumber",    DataInfo(3,4, "INTEGER")},
-    {"invoiceDate",             DataInfo(4,5, "TEXT")},
+    {"invoiceDate",             DataInfo(4,5, "TEXT", true, false, "MM/dd/yy", 0, 100)},
     {"invoiceNumber",           DataInfo(5,0, "INTEGER PRIMARY KEY")},
     {"numberOfOrders",          DataInfo(6,6, "INTEGER")},
     {"pieces",                  DataInfo(7,7, "REAL")},
@@ -117,7 +154,7 @@ public:
     {"routeKey",              DataInfo(4,4,"TEXT")},
     {"stopNumber",            DataInfo(5,5,"INTEGER")},
     {"orderDateTime",         DataInfo(6,6,"TEXT")},
-    {"invoiceDate",           DataInfo(7,7,"TEXT")},
+    {"invoiceDate",           DataInfo(7,7,"TEXT", true, false, "MM/dd/yy", 0, 100)},
     {"pieces",                DataInfo(8,8,"REAL")},
     {"weight",                DataInfo(9,9,"REAL")},
     {"cube",                  DataInfo(10,10,"REAL")},
@@ -129,8 +166,8 @@ public:
     {{"division",  DataInfo(0, 1, "TEXT")},
     {"routeKey",   DataInfo(1,0, "TEXT")},
     {"routeName",  DataInfo(2,2, "TEXT")},
-    {"whs1Cutoff", DataInfo(3,3, "TEXT")},
-    {"whs2Cutoff", DataInfo(4,4, "TEXT")},
+    {"whs1Cutoff", DataInfo(3,3, "TEXT", false, true, "HH:mm", 0, 0)},
+    {"whs2Cutoff", DataInfo(4,4, "TEXT", false, true, "HH:mm", 0, 0)},
     {"truck",      DataInfo(5,5, "TEXT")},
     {"driverID",   DataInfo(6,6,"INTEGER")},
     {"driverName", DataInfo(7,7,"TEXT")}};
@@ -144,7 +181,7 @@ public:
     {"customerAddr2",       DataInfo(5, 5, "TEXT")},
     {"city",                DataInfo(6, 6, "TEXT")},
     {"state",               DataInfo(7, 7, "TEXT")},
-    {"lastOrder",           DataInfo(8, 8, "TEXT")},
+    {"lastOrder",           DataInfo(8, 8, "TEXT", true, false, "MM/dd/yy", 0, 100)},
     {"customerChain",       DataInfo(9, 9, "TEXT")},
     {"cstuomerGroup",       DataInfo(10, 10, "TEXT")},
     {"timeWindow1Open",     DataInfo(11, 11, "TEXT")},
@@ -168,6 +205,8 @@ public:
     {"openTime",            DataInfo(29, 29, "TEXT")},
     {"closeTime",           DataInfo(30, 30, "TEXT")}};
 
+    void generateRandyReport();
+
 private:
     QString dbPath_;
 
@@ -179,13 +218,14 @@ private:
     //Static functions for threading.
     static QString createValueTuple(QVector<QString> csvLine, const QVector<QString> &sqliteTypes);
     static QVector<QString> parseCSVLine(const QString &csvLine);
-    static QString csvLineToValueString(const QString &csvLine, const QVector<QString> &sqliteTypes);
+    static QString csvLineToValueString(const QString &csvLine, const QVector<DataInfo> &sqliteTypes);
 
     TableInfoMap knownFormats_ = {{"OrderTrackingCSV",          formatOrderTrackingCSV_},
                                   {"RouteProfitabilityCSV",     formatRouteProfitabilityCSV_},
                                   {"OrderObj",                  formatOrderObj_},
                                   {"TruckDriverAssignCSV",      formatTruckDriverAssignCSV_},
                                   {"CustRoutesTimeWindowCSV",   formatCustRoutesTimeWindowCSV_}};
+
 
 signals:
 
