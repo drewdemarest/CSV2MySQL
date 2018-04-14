@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     sqliteDB.importCSVtoSQLite(sqliteDB.formatOrderTrackingCSV_, "OrderTrackingCSV", false, QCoreApplication::applicationDirPath() + "/orderTrackingHistoryYear.csv", 100000);
     sqliteDB.importCSVtoSQLite(sqliteDB.formatRouteProfitabilityCSV_, "RouteProfitabilityCSV", true, QCoreApplication::applicationDirPath() + "/routeProfitabilityDetailYear.csv", 100000);
     sqliteDB.importCSVtoSQLite(sqliteDB.formatTruckDriverAssignCSV_, "TruckDriverAssignCSV", true, QCoreApplication::applicationDirPath() + "/truckDriverAssign0.csv", 100000);
-    sqliteDB.importCSVtoSQLite(sqliteDB.formatCustRoutesTimeWindowCSV_, "CustRoutesTimeWindowCSV", true, QCoreApplication::applicationDirPath() + "/custWin0.csv", 100000);
+    sqliteDB.importCSVtoSQLite(sqliteDB.formatCustRoutesTimeWindowCSV_, "CustRoutesTimeWindowCSV", true, QCoreApplication::applicationDirPath() + "/custWin3.csv", 100000);
     malloc_trim(0);
     //sqliteDB.populateOrders();
 

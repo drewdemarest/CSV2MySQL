@@ -184,8 +184,8 @@ public:
     {"lastOrder",           DataInfo(8, 8, "TEXT", true, false, "MM/dd/yy", 0, 100)},
     {"customerChain",       DataInfo(9, 9, "TEXT")},
     {"cstuomerGroup",       DataInfo(10, 10, "TEXT")},
-    {"timeWindow1Open",     DataInfo(11, 11, "TEXT")},
-    {"timeWindow1Close",    DataInfo(12, 12, "TEXT")},
+    {"timeWindow1Open",     DataInfo(11, 11, "TEXT", false, true, "hmm")},
+    {"timeWindow1Close",    DataInfo(12, 12, "TEXT", false, true, "hmm")},
     {"mondayRoute",         DataInfo(13, 13, "TEXT")},
     {"mondayStop",          DataInfo(14, 14, "INTEGER")},
     {"tuesdayRoute",        DataInfo(15, 15, "TEXT")},
@@ -200,10 +200,10 @@ public:
     {"saturdayStop",        DataInfo(24, 24, "INTEGER")},
     {"sundayRoute",         DataInfo(25, 25, "TEXT")},
     {"sundayStop",          DataInfo(26, 26, "INTEGER")},
-    {"timeWindow2Open",     DataInfo(27, 27, "TEXT")},
-    {"timeWindow2Close",    DataInfo(28, 28, "TEXT")},
-    {"openTime",            DataInfo(29, 29, "TEXT")},
-    {"closeTime",           DataInfo(30, 30, "TEXT")}};
+    {"timeWindow2Open",     DataInfo(27, 27, "TEXT", false, true, "hmm")},
+    {"timeWindow2Close",    DataInfo(28, 28, "TEXT", false, true, "hmm")},
+    {"openTime",            DataInfo(29, 29, "TEXT", false, true, "hmm")},
+    {"closeTime",           DataInfo(30, 30, "TEXT", false, true, "hmm")}};
 
     void generateRandyReport();
 

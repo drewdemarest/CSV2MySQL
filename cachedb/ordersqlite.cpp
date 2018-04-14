@@ -360,7 +360,18 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
 
             if(sqliteTypes.at(matchCounter).isTime())
             {
-                word = QTime::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addSecs(sqliteTypes.at(matchCounter).getModSec()).toString("HH:mm:ss");
+                if(word == "0")
+                    matchVec[matchCounter] = "NULL";
+                else
+                {
+                    while(word.size() < 4)
+                        word.prepend("0");
+
+                    if(word == "2400")
+                        word = "0000";
+
+                    word = QTime::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addSecs(sqliteTypes.at(matchCounter).getModSec()).toString("HH:mm:ss");
+                }
             }
 
             if(sqliteTypes.at(matchCounter).isDateTime())
@@ -368,11 +379,14 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
                 word = QDateTime::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addSecs(sqliteTypes.at(matchCounter).getModSec()).toString("yyyy-MM-dd HH:MM:ss");
             }
 
+            if(matchVec[matchCounter] != "NULL")
+            {
             if(sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("TEXT") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("BLOB"))
                 matchVec[matchCounter] = "\"" + word + "\"";
 
             if(sqliteTypes.at(matchCounter).getSQLiteType().contains("INTEGER") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("REAL"))
                 matchVec[matchCounter] = word.remove(QRegularExpression("[a-zA-Z,]"));
+            }
         }
         ++matchCounter;
     }
