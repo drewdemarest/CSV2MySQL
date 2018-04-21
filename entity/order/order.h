@@ -21,13 +21,14 @@ public:
     QStringList neededKeys();
     QStringList completedKeys();
     bool informationValid();
-    void calculateAnalysisData();
+//    void calculateAnalysisData();
 
     static QStringList getCSVStringListOrder();
     static QStringList getKeyListInOrder();
     static QMap<QString,QString> getDBTableInfo();
 
 private:
+    friend class Customer;
     QString stripQuotes(const QString &data);
 
     QString dateFormat_ = "M/d/yyyy";
@@ -48,7 +49,15 @@ private:
                               {"cost", QVariant()},
                               {"profit", QVariant()}};
 
-    QVariantMap analysisInformation_ = {{"dayOfWeekInt", QVariant()}};
+    bool offday_;
+    bool fixer_;
+    bool routed_;
+
+    bool isFixer()const{return fixer_;}
+    bool isOffday()const{return offday_;}
+    bool isRouted()const{return routed_;}
+
+    //QVariantMap analysisInformation_ = {{"dayOfWeekInt", QVariant()}};
 };
 
 #endif // ORDER_H

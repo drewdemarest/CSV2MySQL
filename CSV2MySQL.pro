@@ -32,7 +32,8 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     entity/order/orderfactory.cpp \
-    cachedb/ordersqlite.cpp
+    cachedb/ordersqlite.cpp \
+    entity/customer/customer.cpp
 
 HEADERS += \
     entity/order/order.h \
@@ -42,7 +43,8 @@ HEADERS += \
     json2sqlite/json2sqlite.h \
     mainwindow.h \
     entity/order/orderfactory.h \
-    cachedb/ordersqlite.h
+    cachedb/ordersqlite.h \
+    entity/customer/customer.h
 
 FORMS += \
         mainwindow.ui
