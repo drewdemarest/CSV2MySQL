@@ -160,7 +160,7 @@ QString OrderSQLite::createNewTable(const QString &tableName, const DataInfoMap 
 }
 
 
-QVector<QString> OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
+bool OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
                                                 const QString &tableName,
                                                 const bool hasHeaders,
                                                 const QString &filePath,
@@ -184,7 +184,7 @@ QVector<QString> OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
     if(!csvFile->open(QIODevice::ReadOnly | QIODevice::Text))
     {
         qDebug() << csvFile->errorString();
-        return QVector<QString>();
+        return false;
     }
 
     //Skip headers
@@ -227,7 +227,8 @@ QVector<QString> OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
     csvFile->close();
     delete csvFile;
 
-    return csvStringVecs;
+    emit importFinished(true);
+    return true;
 }
 
 bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, const QVector<QString> &linesIn)
@@ -406,9 +407,4 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
     matchVec.squeeze();
     //qDebug() << valueString;
     return valueString;
-}
-
-void OrderSQLite::generateRandyReport()
-{
-
 }
