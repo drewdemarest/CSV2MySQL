@@ -1,14 +1,5 @@
 #include "ordersqlite.h"
 
-//static int callback(void *NotUsed, int argc, char **argv, char **azColName) {
-//    int i;
-//    for(i = 0; i<argc; i++) {
-//        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-//    }
-//    printf("\n");
-//    return 0;
-//}
-
 OrderSQLite::OrderSQLite(const QString &dbPath, QObject *parent) : QObject(parent)
 {
     dbPath_ = dbPath;
@@ -83,7 +74,7 @@ bool OrderSQLite::populateOrders() const
 
 
     QSqlQuery query(database);
-    qDebug() << queryString;
+    //qDebug() << queryString;
     query.prepare(queryString);
     success = query.exec();
     if(!success)
@@ -184,7 +175,7 @@ QVector<QString> OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
     for(auto key: csvFormat.keys())
     {
         sqliteTypes[csvFormat.value(key).getCSVColumn()] = csvFormat.value(key);
-        qDebug() << csvFormat.value(key).getCSVColumn();
+        //qDebug() << csvFormat.value(key).getCSVColumn();
     }
 
 
@@ -246,7 +237,7 @@ bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, 
     QVector<QString> csvColumns(format.size());
     QVector<QString> sqliteTypes(format.size());
 
-    queryString.append("INSERT OR IGNORE INTO "+tableName+"(");
+    queryString.append("INSERT OR REPLACE INTO "+tableName+"(");
 
     for(auto key: format.keys())
     {
@@ -284,7 +275,7 @@ bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, 
         if(!success)
         {
             qDebug() << query.lastError();
-            //qDebug() << queryString;
+            qDebug() << queryString;
         }
         database.commit();
         query.finish();
@@ -309,7 +300,6 @@ QVector<QString> OrderSQLite::parseCSVLine(const QString &csvLine)
     QRegularExpressionMatch match;
     QString word;
     word.reserve(100);
-    qDebug() << sizeof(word);
     QVector<QString> matchVec;
 
     if(csvLine.at(0) == ',')
@@ -381,11 +371,19 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
 
             if(matchVec[matchCounter] != "NULL")
             {
-            if(sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("TEXT") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("BLOB"))
-                matchVec[matchCounter] = "\"" + word + "\"";
+                if(sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("TEXT") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("BLOB"))
+                    matchVec[matchCounter] = "\"" + word + "\"";
 
-            if(sqliteTypes.at(matchCounter).getSQLiteType().contains("INTEGER") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("REAL"))
-                matchVec[matchCounter] = word.remove(QRegularExpression("[a-zA-Z,]"));
+                if(sqliteTypes.at(matchCounter).getSQLiteType().contains("INTEGER") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("REAL"))
+                {
+                    if(word.startsWith("."))
+                        word.prepend("0");
+                    word = word.remove(QRegularExpression("[a-zA-Z,]"));
+                    matchVec[matchCounter] = word;
+                    if(word.isEmpty())
+                        matchVec[matchCounter] = "NULL";
+
+                }
             }
         }
         ++matchCounter;
@@ -406,6 +404,7 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
     //qDebug() << valueString;
     matchVec.clear();
     matchVec.squeeze();
+    //qDebug() << valueString;
     return valueString;
 }
 
