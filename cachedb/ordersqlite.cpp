@@ -121,8 +121,7 @@ bool OrderSQLite::makeOrderDB()
             query.clear();
             query.prepare(createNewTable(key, knownFormats_[key]));
             success = query.exec();
-
-
+            qDebug() << createNewTable(key, knownFormats_[key]);
             if(!success)
                 qDebug() << query.lastError();
         }
@@ -334,59 +333,118 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
         ++matchCounter;
     }
 
-    while (i.hasNext()) {
+    while (i.hasNext())
+    {
         match = i.next();
         word = match.captured(1);
         word = word.remove("\"");
         word = word.trimmed();
+
+        //check if null word
         if(word.isEmpty())
-            matchVec[matchCounter] = "NULL";
-        else
         {
-            //qDebug() << sqliteTypes.at(matchCounter).getSQLiteType();
-            if(sqliteTypes.at(matchCounter).isDate())
-            {
-                word = QDate::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addYears(sqliteTypes.at(matchCounter).getModYear()).toString("yyyy-MM-dd");
-            }
-
-            if(sqliteTypes.at(matchCounter).isTime())
-            {
-                if(word == "0")
-                    matchVec[matchCounter] = "NULL";
-                else
-                {
-                    while(word.size() < 4)
-                        word.prepend("0");
-
-                    if(word == "2400")
-                        word = "0000";
-
-                    word = QTime::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addSecs(sqliteTypes.at(matchCounter).getModSec()).toString("HH:mm:ss");
-                }
-            }
-
-            if(sqliteTypes.at(matchCounter).isDateTime())
-            {
-                word = QDateTime::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addSecs(sqliteTypes.at(matchCounter).getModSec()).toString("yyyy-MM-dd HH:MM:ss");
-            }
-
-            if(matchVec[matchCounter] != "NULL")
-            {
-                if(sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("TEXT") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("BLOB"))
-                    matchVec[matchCounter] = "\"" + word + "\"";
-
-                if(sqliteTypes.at(matchCounter).getSQLiteType().contains("INTEGER") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("REAL"))
-                {
-                    if(word.startsWith("."))
-                        word.prepend("0");
-                    word = word.remove(QRegularExpression("[a-zA-Z,]"));
-                    matchVec[matchCounter] = word;
-                    if(word.isEmpty())
-                        matchVec[matchCounter] = "NULL";
-
-                }
-            }
+            matchVec[matchCounter] = "NULL";
+            ++matchCounter;
+            continue;
         }
+
+        switch(sqliteTypes.at(matchCounter).getSQLiteType())
+        {
+        case SQLiteType::INTEGER:
+            OrderSQLite::parseInteger(word);
+            matchVec[matchCounter] = word;
+            break;
+
+        case SQLiteType::REAL:
+            OrderSQLite::parseReal(word);
+            matchVec[matchCounter] = word;
+            break;
+
+        case SQLiteType::TEXT:
+            OrderSQLite::parseText(word);
+            matchVec[matchCounter] = word;
+            break;
+
+        case SQLiteType::TEXT_DATE:
+            OrderSQLite::parseDate(word, sqliteTypes.at(matchCounter));
+            matchVec[matchCounter] = word;
+            break;
+
+        case SQLiteType::TEXT_TIME:
+            OrderSQLite::parseDate(word, sqliteTypes.at(matchCounter));
+            matchVec[matchCounter] = word;
+            break;
+
+        case SQLiteType::TEXT_DATETIME:
+            OrderSQLite::parseDateTime(word, sqliteTypes.at(matchCounter));
+            matchVec[matchCounter] = word;
+            break;
+
+        case SQLiteType::BLOB:
+            OrderSQLite::parseBlob(word);
+            matchVec[matchCounter] = word;
+            break;
+
+        case SQLiteType::NULL_SQL:
+            matchVec[matchCounter] = "NULL";
+            break;
+        }
+/*
+//        else
+//        {
+//            //qDebug() << sqliteTypes.at(matchCounter).getSQLiteType();
+
+//            //parse date
+//            if(sqliteTypes.at(matchCounter).isDate())
+//            {
+//                word = QDate::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addYears(sqliteTypes.at(matchCounter).getModYear()).toString("yyyy-MM-dd");
+//            }
+//            //end parse date
+
+//            //parse time
+//            if(sqliteTypes.at(matchCounter).isTime())
+//            {
+//                if(word == "0")
+//                    matchVec[matchCounter] = "NULL";
+//                else
+//                {
+//                    while(word.size() < 4)
+//                        word.prepend("0");
+
+//                    if(word == "2400")
+//                        word = "0000";
+
+//                    word = QTime::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addSecs(sqliteTypes.at(matchCounter).getModSec()).toString("HH:mm:ss");
+//                }
+//            }
+//            //end parse time
+
+//            //parse datetime
+//            if(sqliteTypes.at(matchCounter).isDateTime())
+//            {
+//                word = QDateTime::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addSecs(sqliteTypes.at(matchCounter).getModSec()).toString("yyyy-MM-dd HH:MM:ss");
+//            }
+//            //end parse datetime
+
+//            //parse text // parse blob
+//            if(matchVec[matchCounter] != "NULL")
+//            {
+//                if(sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("TEXT") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("BLOB"))
+//                    matchVec[matchCounter] = "\"" + word + "\"";
+
+//                //parse real, integer
+//                if(sqliteTypes.at(matchCounter).getSQLiteType().contains("INTEGER") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("REAL"))
+//                {
+//                    if(word.startsWith("."))
+//                        word.prepend("0");
+//                    word = word.remove(QRegularExpression("[a-zA-Z,]"));
+//                    matchVec[matchCounter] = word;
+//                    if(word.isEmpty())
+//                        matchVec[matchCounter] = "NULL";
+
+//                }
+//            }
+        }*/
         ++matchCounter;
     }
 
@@ -407,4 +465,64 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
     matchVec.squeeze();
     //qDebug() << valueString;
     return valueString;
+}
+
+void OrderSQLite::ifEmptyNull(QString &word)
+{
+    if(word.isEmpty())
+        word = "NULL";
+}
+
+void OrderSQLite::parseText(QString &text)
+{
+    text = "\"" + text + "\"";
+}
+
+void OrderSQLite::parseBlob(QString &blob)
+{
+    blob = "\"" + blob + "\"";
+}
+
+void OrderSQLite::parseInteger(QString &integer)
+{
+    integer = integer.remove(QRegularExpression("[a-zA-Z,]"));
+    OrderSQLite::ifEmptyNull(integer);
+}
+
+void OrderSQLite::parseReal(QString &real)
+{
+    if(real.startsWith("."))
+        real.prepend("0");
+
+    real = real.remove(QRegularExpression("[a-zA-Z,]"));
+    OrderSQLite::ifEmptyNull(real);
+}
+
+void OrderSQLite::parseDate(QString &date, const DataInfo &format)
+{
+    date = QDate::fromString(date, format.getDateTimeFormat()).addYears(format.getModYear()).toString("yyyy-MM-dd");
+
+    OrderSQLite::ifEmptyNull(date);
+}
+
+void OrderSQLite::parseTime(QString &time, const DataInfo &format)
+{
+        if(time == "0")
+            time = "NULL";
+
+        if(time == "2400")
+            time = "0000";
+
+        while(time.size() < 4)
+            time.prepend("0");
+
+        time = QTime::fromString(time, format.getDateTimeFormat()).addSecs(format.getModSec()).toString("HH:mm:ss");
+
+        OrderSQLite::ifEmptyNull(time);
+}
+
+void OrderSQLite::parseDateTime(QString &dateTime, const DataInfo &format)
+{
+    dateTime = QDateTime::fromString(dateTime, format.getDateTimeFormat()).addSecs(format.getModSec()).toString("yyyy-MM-dd HH:MM:ss");
+    OrderSQLite::ifEmptyNull(dateTime);
 }

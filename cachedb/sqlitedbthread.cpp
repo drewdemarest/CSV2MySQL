@@ -15,5 +15,5 @@ SQLiteDBThread::SQLiteDBThread(const QString &dbPath, QObject *parent) : QObject
 void SQLiteDBThread::handleResult(const bool &success)
 {
     qDebug() << "result is " << success;
-    malloc_trim(0);
+    //malloc_trim(0);
 }
