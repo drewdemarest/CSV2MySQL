@@ -17,12 +17,12 @@ enum SQLiteType{INTEGER, REAL, TEXT, TEXT_DATE, TEXT_TIME, TEXT_DATETIME, BLOB, 
 struct DataInfo
 {
     DataInfo(){}
-    DataInfo(int csvColumn, int sqliteColumn, SQLiteType sqliteType, bool isPrimaryKey = false, QString dateTimeFormat = QString(), int modYear = 0, qint64 modSec = 0)
+    DataInfo(int csvColumn, int sqliteColumn, SQLiteType sqliteType, bool primaryKey = false, QString dateTimeFormat = QString(), int modYear = 0, qint64 modSec = 0)
     {
         csvColumn_ = csvColumn;
         sqliteColumn_ = sqliteColumn;
         sqliteType_ = sqliteType;
-        primaryKey_ = isPrimaryKey;
+        primaryKey_ = primaryKey;
         dateTimeFormat_ = dateTimeFormat;
         modSec_  = modSec;
         modYear_ = modYear;
@@ -51,6 +51,7 @@ struct DataInfo
         csvColumn_ = other.csvColumn_;
         sqliteColumn_ = other.sqliteColumn_;
         sqliteType_ = other.sqliteType_;
+        primaryKey_ = other.primaryKey_;
         date_ = other.date_;
         time_ = other.time_;
         dateTime_ = other.dateTime_;
@@ -141,7 +142,7 @@ public:
         {"orderType",           DataInfo(1,2,SQLiteType::TEXT)},
         {"orderDate",           DataInfo(2,3,SQLiteType::TEXT_DATE,false, "MM/dd/yy", 100)},
         {"invoiceDate",         DataInfo(3,4,SQLiteType::TEXT_DATE,false, "MM/dd/yy", 100)},
-        {"orderTime",           DataInfo(4,5,SQLiteType::TEXT_TIME,false, "HH:mm:ss")},
+        {"orderTime",           DataInfo(4,5,SQLiteType::TEXT_TIME,false, "HH:mm:ss", 0, 0)},
         {"rep",                 DataInfo(5,6,SQLiteType::TEXT)},
         {"terms",               DataInfo(6,7,SQLiteType::TEXT)},
         {"customerNumber",      DataInfo(7,8,SQLiteType::INTEGER)},
@@ -334,7 +335,7 @@ private:
                                   {"OrderObj",                  formatOrderObj_},
                                   {"TruckDriverAssignCSV",      formatTruckDriverAssignCSV_},
                                   {"CustRoutesTimeWindowCSV",   formatCustRoutesTimeWindowCSV_},
-                                  {"CustomerChainGroupCSV",         formatCustomerChainGroupCSV_}};
+                                  {"CustomerChainGroupCSV",     formatCustomerChainGroupCSV_}};
 
 
 signals:

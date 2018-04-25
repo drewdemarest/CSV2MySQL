@@ -34,7 +34,8 @@ SOURCES += \
     entity/order/orderfactory.cpp \
     cachedb/ordersqlite.cpp \
     entity/customer/customer.cpp \
-    cachedb/sqlitedbthread.cpp
+    cachedb/sqlitedbthread.cpp \
+    exporter/tableaumysql.cpp
 
 HEADERS += \
     entity/order/order.h \
@@ -46,7 +47,8 @@ HEADERS += \
     entity/order/orderfactory.h \
     cachedb/ordersqlite.h \
     entity/customer/customer.h \
-    cachedb/sqlitedbthread.h
+    cachedb/sqlitedbthread.h \
+    exporter/tableaumysql.h
 
 FORMS += \
         mainwindow.ui

@@ -18,6 +18,12 @@ public:
         sqliteThread.wait();
     }
 
+    void importFromThread(const DataInfoMap &csvFormat,
+                          const QString &tableName,
+                          const bool hasHeaders,
+                          const QString &filePath,
+                          const int &chunkSize);
+
     QThread sqliteThread;
 
 signals:
@@ -29,6 +35,9 @@ signals:
 
 public slots:
     void handleResult(const bool &success);
+
+private:
+    QString dbPath_;
 };
 
 #endif // SQLITEDBTHREAD_H

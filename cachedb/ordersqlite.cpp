@@ -1,11 +1,17 @@
 #include "ordersqlite.h"
 
 OrderSQLite::OrderSQLite(const QString &dbPath, QObject *parent) : QObject(parent)
-{
+{   qDebug() << dbPath;
     dbPath_ = dbPath;
 
     if(!doesDatabaseExist())
         makeOrderDB();
+//    else
+//    {
+//        QFile file(dbPath);
+//        file.remove();
+//        makeOrderDB();
+//    }
 }
 
 bool OrderSQLite::doesDatabaseExist() const
@@ -121,7 +127,7 @@ bool OrderSQLite::makeOrderDB()
             query.clear();
             query.prepare(createNewTable(key, knownFormats_[key]));
             success = query.exec();
-            qDebug() << createNewTable(key, knownFormats_[key]);
+            //qDebug() << createNewTable(key, knownFormats_[key]);
             if(!success)
                 qDebug() << query.lastError();
         }
@@ -143,12 +149,60 @@ bool OrderSQLite::makeOrderDB()
 QString OrderSQLite::createNewTable(const QString &tableName, const DataInfoMap &format)
 {
     QString queryString; queryString.reserve(1000);
+    QString primaryKeyString; primaryKeyString.reserve(1000);
+    primaryKeyString.append("PRIMARY KEY(");
     queryString.append("CREATE TABLE "+tableName+"(");
     QStringList sqliteColumns = QStringList::fromVector(QVector<QString>(format.size()));
+    QStringList primaryKeys;
 
     //Use format keys to ensure that columns are in the correct sequence.
     for(auto key: format.keys())
-        sqliteColumns[format[key].sqliteColumn_] = key + " " + format[key].sqliteType_;
+    {
+        if(format[key].isPrimaryKey())
+            primaryKeys.append(key);
+
+        switch (format[key].sqliteType_)
+        {
+        case SQLiteType::INTEGER:
+            sqliteColumns[format[key].sqliteColumn_] = key + " INTEGER";
+            break;
+
+        case SQLiteType::REAL:
+            sqliteColumns[format[key].sqliteColumn_] = key + " REAL";
+            break;
+
+        case SQLiteType::TEXT:
+            sqliteColumns[format[key].sqliteColumn_] = key + " TEXT";
+            break;
+
+        case SQLiteType::TEXT_DATE:
+            sqliteColumns[format[key].sqliteColumn_] = key + " TEXT";
+            break;
+
+        case SQLiteType::TEXT_TIME:
+            sqliteColumns[format[key].sqliteColumn_] = key + " TEXT";
+            break;
+
+        case SQLiteType::TEXT_DATETIME:
+            sqliteColumns[format[key].sqliteColumn_] = key + " TEXT";
+            break;
+
+        case SQLiteType::BLOB:
+            sqliteColumns[format[key].sqliteColumn_] = key + " BLOB";
+            break;
+
+        case SQLiteType::NULL_SQL:
+            sqliteColumns[format[key].sqliteColumn_] = key + " NULL";
+            break;
+        }
+    }
+
+    if(!primaryKeys.empty())
+    {
+        primaryKeyString.append(primaryKeys.join(", "));
+        primaryKeyString.append(")");
+        sqliteColumns.append(primaryKeyString);
+    }
 
     queryString.append(sqliteColumns.join(", "));
     queryString.append(")");
@@ -165,6 +219,9 @@ bool OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
                                                 const QString &filePath,
                                                 const int &chunkSize)
 {
+
+    qDebug() << tableName << hasHeaders << filePath << chunkSize;
+
     QFile *csvFile = new QFile(filePath);
     QTextStream csvFileStream(csvFile);
     QVector<QString> lineVec(chunkSize);
@@ -177,19 +234,19 @@ bool OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
         //qDebug() << csvFormat.value(key).getCSVColumn();
     }
 
-
     auto csvLineToValueStringFunc = std::bind(OrderSQLite::csvLineToValueString, std::placeholders::_1, sqliteTypes);
 
     if(!csvFile->open(QIODevice::ReadOnly | QIODevice::Text))
     {
         qDebug() << csvFile->errorString();
+        qDebug() << "There was an error";
+        emit importFinished(false);
         return false;
     }
 
     //Skip headers
     if(hasHeaders && !csvFileStream.atEnd())
         csvFileStream.readLine();
-
 
     // Chunks
     int i = 0;
@@ -323,8 +380,8 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
     QRegularExpressionMatchIterator i = csvParse.globalMatch(csvLine.simplified());
     QRegularExpressionMatch match;
     QVector<QString> matchVec(sqliteTypes.size());
-    QString word; word.reserve(100);
-    QString valueString; valueString.reserve(2000);
+    QString word; //word.reserve(100);
+    QString valueString; //valueString.reserve(2000);
     int matchCounter = 0;
 
     if(csvLine.at(0) == ',')
@@ -389,62 +446,6 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
             matchVec[matchCounter] = "NULL";
             break;
         }
-/*
-//        else
-//        {
-//            //qDebug() << sqliteTypes.at(matchCounter).getSQLiteType();
-
-//            //parse date
-//            if(sqliteTypes.at(matchCounter).isDate())
-//            {
-//                word = QDate::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addYears(sqliteTypes.at(matchCounter).getModYear()).toString("yyyy-MM-dd");
-//            }
-//            //end parse date
-
-//            //parse time
-//            if(sqliteTypes.at(matchCounter).isTime())
-//            {
-//                if(word == "0")
-//                    matchVec[matchCounter] = "NULL";
-//                else
-//                {
-//                    while(word.size() < 4)
-//                        word.prepend("0");
-
-//                    if(word == "2400")
-//                        word = "0000";
-
-//                    word = QTime::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addSecs(sqliteTypes.at(matchCounter).getModSec()).toString("HH:mm:ss");
-//                }
-//            }
-//            //end parse time
-
-//            //parse datetime
-//            if(sqliteTypes.at(matchCounter).isDateTime())
-//            {
-//                word = QDateTime::fromString(word, sqliteTypes.at(matchCounter).getDateTimeFormat()).addSecs(sqliteTypes.at(matchCounter).getModSec()).toString("yyyy-MM-dd HH:MM:ss");
-//            }
-//            //end parse datetime
-
-//            //parse text // parse blob
-//            if(matchVec[matchCounter] != "NULL")
-//            {
-//                if(sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("TEXT") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("BLOB"))
-//                    matchVec[matchCounter] = "\"" + word + "\"";
-
-//                //parse real, integer
-//                if(sqliteTypes.at(matchCounter).getSQLiteType().contains("INTEGER") || sqliteTypes.at(matchCounter).getSQLiteType() == QLatin1String("REAL"))
-//                {
-//                    if(word.startsWith("."))
-//                        word.prepend("0");
-//                    word = word.remove(QRegularExpression("[a-zA-Z,]"));
-//                    matchVec[matchCounter] = word;
-//                    if(word.isEmpty())
-//                        matchVec[matchCounter] = "NULL";
-
-//                }
-//            }
-        }*/
         ++matchCounter;
     }
 
@@ -454,10 +455,10 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
     {
         if(i == matchVec.size() - 1)
         {
-            valueString.append(matchVec[i] + ")");
+            valueString.append(matchVec[i].append(")"));
             continue;
         }
-        valueString.append(matchVec[i] + ", ");
+        valueString.append(matchVec[i].append(", "));
     }
 
     //qDebug() << valueString;
@@ -475,12 +476,14 @@ void OrderSQLite::ifEmptyNull(QString &word)
 
 void OrderSQLite::parseText(QString &text)
 {
-    text = "\"" + text + "\"";
+    text.append("\"");
+    text.prepend("\"");
 }
 
 void OrderSQLite::parseBlob(QString &blob)
 {
-    blob = "\"" + blob + "\"";
+    blob.append("\"");
+    blob.prepend("\"");
 }
 
 void OrderSQLite::parseInteger(QString &integer)
