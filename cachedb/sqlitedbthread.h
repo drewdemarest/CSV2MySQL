@@ -25,6 +25,7 @@ public:
                           const int &chunkSize);
 
     QThread sqliteThread;
+    OrderSQLite *sqliteDB;
 
 signals:
     void operate(const QMap<QString,DataInfo> &csvFormat,
@@ -35,6 +36,7 @@ signals:
 
 public slots:
     void handleResult(const bool &success);
+    void dinger();
 
 private:
     QString dbPath_;

@@ -2,8 +2,14 @@
 
 SQLiteDBThread::SQLiteDBThread(const QString &dbPath, QObject *parent) : QObject(parent)
 {
-    dbPath_ = dbPath;
     qRegisterMetaType<QMap<QString,DataInfo>>();
+
+    dbPath_ = dbPath;
+    sqliteDB = new OrderSQLite(dbPath_);
+    sqliteDB->moveToThread(&sqliteThread);
+    connect(this, &SQLiteDBThread::operate, sqliteDB, &OrderSQLite::importCSVtoSQLite);
+    connect(sqliteDB, &OrderSQLite::importFinished, this, &SQLiteDBThread::handleResult);
+    connect(&sqliteThread, &QThread::finished, this, &SQLiteDBThread::dinger);
 }
 
 void SQLiteDBThread::importFromThread(const DataInfoMap &csvFormat,
@@ -17,12 +23,6 @@ void SQLiteDBThread::importFromThread(const DataInfoMap &csvFormat,
         qApp->processEvents();
     }
 
-    OrderSQLite *sqliteDB = new OrderSQLite(dbPath_);
-    sqliteDB->moveToThread(&sqliteThread);
-    connect(&sqliteThread, &QThread::finished, sqliteDB, &QObject::deleteLater);
-    connect(this, &SQLiteDBThread::operate, sqliteDB, &OrderSQLite::importCSVtoSQLite);
-    connect(sqliteDB, &OrderSQLite::importFinished, this, &SQLiteDBThread::handleResult);
-
     sqliteThread.start();
     emit operate(csvFormat, tableName, hasHeaders, filePath, chunkSize);
 }
@@ -32,4 +32,9 @@ void SQLiteDBThread::handleResult(const bool &success)
     qDebug() << "result is " << success;
     sqliteThread.exit();
     //malloc_trim(0);
+}
+
+void SQLiteDBThread::dinger()
+{
+    qDebug() << "ding";
 }

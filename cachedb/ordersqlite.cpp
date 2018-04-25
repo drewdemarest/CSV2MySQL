@@ -428,7 +428,7 @@ QString OrderSQLite::csvLineToValueString(const QString &csvLine, const QVector<
             break;
 
         case SQLiteType::TEXT_TIME:
-            OrderSQLite::parseDate(word, sqliteTypes.at(matchCounter));
+            OrderSQLite::parseTime(word, sqliteTypes.at(matchCounter));
             matchVec[matchCounter] = word;
             break;
 

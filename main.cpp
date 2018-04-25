@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
 
     SQLiteDBThread dbThread(QCoreApplication::applicationDirPath() + "/potato.db");
     //dbThread.importFromThread(formats.formatOrderTrackingCSV_, "OrderTrackingCSV", true, QCoreApplication::applicationDirPath() + "/orderTrackingHistoryYear.csv", 60000);
-    dbThread.importFromThread(formatOrderTrackingCSV_, "OrderTrackingCSV", true, QCoreApplication::applicationDirPath() + "/orderTrackingHistory1.csv", 60000);
+    dbThread.importFromThread(formatOrderTrackingCSV_, "OrderTrackingCSV", true, QCoreApplication::applicationDirPath() + "/orderTrackingHistoryYear.csv", 60000);
     dbThread.importFromThread(formatRouteProfitabilityCSV_, "RouteProfitabilityCSV", true, QCoreApplication::applicationDirPath() + "/routeProfitabilityDetailYear.csv", 60000);
     dbThread.importFromThread(formatTruckDriverAssignCSV_, "TruckDriverAssignCSV", true, QCoreApplication::applicationDirPath() + "/truckDriverAssign0.csv", 60000);
     dbThread.importFromThread(formatCustRoutesTimeWindowCSV_, "CustRoutesTimeWindowCSV", true, QCoreApplication::applicationDirPath() + "/custWin0.csv", 60000);
