@@ -208,7 +208,6 @@ QString OrderSQLite::createNewTable(const QString &tableName, const DataInfoMap 
     queryString.append(")");
 
     qDebug() << "Query String" << queryString;
-
     return queryString;
 }
 
@@ -326,13 +325,14 @@ bool OrderSQLite::saveToDB(const QString &tableName, const DataInfoMap &format, 
         }
         database.transaction();
         QSqlQuery query(database);
-        query.prepare(queryString);
-        success = query.exec();
+        //query.prepare(queryString);
+        //qDebug() << queryString;
+        success = query.exec(queryString);
 
         if(!success)
         {
             qDebug() << query.lastError();
-            qDebug() << queryString;
+            //qDebug() << queryString;
         }
         database.commit();
         query.finish();
@@ -505,6 +505,11 @@ void OrderSQLite::parseDate(QString &date, const DataInfo &format)
 {
     date = QDate::fromString(date, format.getDateTimeFormat()).addYears(format.getModYear()).toString("yyyy-MM-dd");
 
+    if(!date.isEmpty())
+    {
+        date.append("\"");
+        date.prepend("\"");
+    }
     OrderSQLite::ifEmptyNull(date);
 }
 
@@ -521,11 +526,23 @@ void OrderSQLite::parseTime(QString &time, const DataInfo &format)
 
         time = QTime::fromString(time, format.getDateTimeFormat()).addSecs(format.getModSec()).toString("HH:mm:ss");
 
+        if(!time.isEmpty())
+        {
+            time.append("\"");
+            time.prepend("\"");
+        }
+
         OrderSQLite::ifEmptyNull(time);
 }
 
 void OrderSQLite::parseDateTime(QString &dateTime, const DataInfo &format)
 {
     dateTime = QDateTime::fromString(dateTime, format.getDateTimeFormat()).addSecs(format.getModSec()).toString("yyyy-MM-dd HH:MM:ss");
+
+    if(!dateTime.isEmpty())
+    {
+        dateTime.append("\"");
+        dateTime.prepend("\"");
+    }
     OrderSQLite::ifEmptyNull(dateTime);
 }

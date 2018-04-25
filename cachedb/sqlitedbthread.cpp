@@ -22,6 +22,7 @@ void SQLiteDBThread::importFromThread(const DataInfoMap &csvFormat,
     {
         qApp->processEvents();
     }
+    qDebug() << "ding";
 
     sqliteThread.start();
     emit operate(csvFormat, tableName, hasHeaders, filePath, chunkSize);
@@ -31,6 +32,7 @@ void SQLiteDBThread::handleResult(const bool &success)
 {
     qDebug() << "result is " << success;
     sqliteThread.exit();
+    sqliteThread.wait();
     //malloc_trim(0);
 }
 
