@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     w.show();
 
 
-    mysqlExporter test;
+
     qRegisterMetaType<DataInfo>();
     const DataInfoMap formatOrderTrackingCSV_
     {{"cdl",                    DataInfo(0,1, SQLiteType::INTEGER)},
@@ -187,12 +187,15 @@ int main(int argc, char *argv[])
         {"profitPercentPrevious",   DataInfo(63,63,SQLiteType::REAL)}};
 
 //    SQLiteDBThread dbThread(QCoreApplication::applicationDirPath() + "/potato.db");
-//    dbThread.importFromThread(formats.formatOrderTrackingCSV_, "OrderTrackingCSV", true, QCoreApplication::applicationDirPath() + "/orderTrackingHistoryYear.csv", 60000);
 //    dbThread.importFromThread(formatOrderTrackingCSV_, "OrderTrackingCSV", true, QCoreApplication::applicationDirPath() + "/orderTrackingHistoryYear.csv", 120000);
 //    dbThread.importFromThread(formatRouteProfitabilityCSV_, "RouteProfitabilityCSV", true, QCoreApplication::applicationDirPath() + "/routeProfitabilityDetailYear.csv", 120000);
 //    dbThread.importFromThread(formatTruckDriverAssignCSV_, "TruckDriverAssignCSV", true, QCoreApplication::applicationDirPath() + "/truckDriverAssign0.csv", 120000);
 //    dbThread.importFromThread(formatCustRoutesTimeWindowCSV_, "CustRoutesTimeWindowCSV", true, QCoreApplication::applicationDirPath() + "/custWin0.csv",1260000);
 //    dbThread.importFromThread(formatCustomerChainGroupCSV_, "CustomerChainGroupCSV", true, QCoreApplication::applicationDirPath() + "/customerChainGroup0.csv", 120000);
+
+    mysqlExporter test;
+    test.exportToMySQL(50000);
+    test.exportInvoiceToMySQL(50000);
 
     //sqliteDB.populateOrders();
 
