@@ -31,6 +31,33 @@ public:
 
     QVector<Order> getOrdersForRoutes(const QDate &min,const QDate &max,const QVector<QString> &routes);
 
+
+    const DataInfoMap formatInvoiceCustom_
+    {
+        {"warehouseNumber", DataInfo(0,1,SQLiteType::INTEGER)},
+        {"customerNumber", DataInfo(1,2, SQLiteType::INTEGER)},
+        {"salesRep", DataInfo(2,3,SQLiteType::TEXT)},
+        {"route", DataInfo(3,4,SQLiteType::TEXT)},
+        {"stopNumber", DataInfo(4,5,SQLiteType::INTEGER)},
+        {"invoiceNumber", DataInfo(5,0,SQLiteType::INTEGER,true)},
+        {"invoiceDate", DataInfo(6,6,SQLiteType::TEXT_DATE,true,"yyyy-MM-dd")},
+        {"shipDate", DataInfo(7,7,SQLiteType::TEXT_DATE,false,"yyyy-MM-dd")},
+        {"orderDate", DataInfo(8,8,SQLiteType::TEXT_DATE,false,"yyyy-MM-dd")},
+        {"orderTime", DataInfo(9,9,SQLiteType::TEXT_TIME,false,"hh:mm:ss")},
+        {"netSales", DataInfo(10,10,SQLiteType::REAL)},
+        {"productCost", DataInfo(11,11, SQLiteType::REAL)},
+        {"GPD", DataInfo(12,12,SQLiteType::REAL)},
+        {"profitPercent", DataInfo(13,13,SQLiteType::REAL)},
+        {"caseCube", DataInfo(14,14,SQLiteType::REAL)},
+        {"casesOrdered", DataInfo(15,15,SQLiteType::INTEGER)},
+        {"casesShipped", DataInfo(16,16,SQLiteType::INTEGER)},
+        {"weight",DataInfo(17,17,SQLiteType::REAL)},
+        {"driverNumber", DataInfo(18,18,SQLiteType::TEXT)},
+        {"truckNumber", DataInfo(19,19, SQLiteType::TEXT)},
+        {"credit", DataInfo(20,20,SQLiteType::TEXT)}};
+
+
+
     const DataInfoMap formatOrderTrackingCSV_
     {{"cdl",                    DataInfo(0,1, SQLiteType::INTEGER)},
         {"orderType",           DataInfo(1,2,SQLiteType::TEXT)},
@@ -150,7 +177,7 @@ public:
         {"salesLoc",                DataInfo(17,17, SQLiteType::TEXT)},
         {"territory",               DataInfo(18,18,SQLiteType::TEXT)},
         {"rep",                     DataInfo(19,19,SQLiteType::TEXT)},
-        {"merchaniser",             DataInfo(20,20,SQLiteType::TEXT)},
+        {"merchandiser",             DataInfo(20,20,SQLiteType::TEXT)},
         {"exclusionNumber",         DataInfo(21,21,SQLiteType::TEXT)},
         {"proprietaryDesc",         DataInfo(22,22,SQLiteType::TEXT)},
         {"arFeeCode",               DataInfo(23,23,SQLiteType::TEXT)},
@@ -229,7 +256,8 @@ private:
                                   {"OrderObj",                  formatOrderObj_},
                                   {"TruckDriverAssignCSV",      formatTruckDriverAssignCSV_},
                                   {"CustRoutesTimeWindowCSV",   formatCustRoutesTimeWindowCSV_},
-                                  {"CustomerChainGroupCSV",     formatCustomerChainGroupCSV_}};
+                                  {"CustomerChainGroupCSV",     formatCustomerChainGroupCSV_},
+                                  {"InvoiceCustomCSV",          formatInvoiceCustom_}};
 
 
 signals:

@@ -3,6 +3,10 @@
 mysqlExporter::mysqlExporter(QObject *parent) : QObject(parent)
 {
     //load the mysql settings from a db.
+    mySQLSettings_ = settings_.loadSettings(settingsDBPAth_, mySQLSettings_);
+    DBTransferFormat dbxfer;
+    qDebug() << dbxfer.makeSelectFromDB1();
+    //TEST CODE
 
 }
 
@@ -12,34 +16,27 @@ bool mysqlExporter::exportQueryString(const QString &queryString)
     bool success;
     {
         QSqlDatabase sslDB = QSqlDatabase::addDatabase("QMYSQL", "test");
-        QString workingDir = QCoreApplication::applicationDirPath() + "/";
-        QString caStr = ("SSL_CA=" + workingDir + "ca.pem;");
-        QString clientKeyStr = ("SSL_KEY=" + workingDir + "client-key.pem;");
-        QString clientCertStr = ("SSL_CERT=" + workingDir + "client-cert.pem;");
+
+        QString caStr = mySQLSettings_["caStr"].toString();
+        QString clientKeyStr = mySQLSettings_["clientKeyStr"].toString();
+        QString clientCertStr = mySQLSettings_["clientCertStr"].toString();
+        sslDB.setHostName(mySQLSettings_["hostName"].toString());
+        sslDB.setDatabaseName(mySQLSettings_["databaseName"].toString());
+        sslDB.setUserName(mySQLSettings_["userName"].toString());
+        sslDB.setPassword(mySQLSettings_["password"].toString());
         sslDB.setConnectOptions(caStr + clientKeyStr + clientCertStr);
+
         if(sslDB.open())
         {
             qDebug() << "dbOpen";
             QSqlQuery query(sslDB);
-            //query.prepare(queryString);
-            //qDebug() << queryString;
-            //QString queryString = "REPLACE INTO custVerbose (customerNumber, customerName) VALUES (100, \"windows is a hoooooooooooor\")";
-            //query.prepare(queryString);
             success = query.exec(queryString);
-            //qDebug() << queryString;
 
             if(!success)
             {
                 qDebug() << query.lastError();
                 lastError = query.lastError().number();
             }
-//            QString queryResult;
-
-//            while (query.next())
-//                for(int j = 0; j < query.record().count(); ++j)
-//                    queryResult.append(query.value(j).toString());
-
-//            qDebug() << queryResult;
 
             sslDB.commit();
             query.finish();
@@ -47,28 +44,26 @@ bool mysqlExporter::exportQueryString(const QString &queryString)
         }
         else
         {
-            qDebug() << "reee";
+            qDebug() << sslDB.lastError();
         }
         sslDB.close();
-        qDebug() << "done";
+        qDebug() << "Completed MySQL";
     }
     QSqlDatabase::removeDatabase("test");
 
 
-    if(lastError == 2006)
+    if(lastError == 2006 || lastError == 2013)
     {
-        qDebug() << "ree?";
-        usleep(60000000);
-        qDebug() << "ree2?";
+        qDebug() << "Failed due to " << lastError << " waiting 9secs.";
+        usleep(9000000);
+        qDebug() << "Done waitng";
         exportQueryString(queryString);
     }
 
     return success;
 }
 
-
-
-bool mysqlExporter::exportToMySQL(int chunkSize)
+bool mysqlExporter::exportToMySQL(int chunkSize, QVector<QString>tables)
 {
 
     QString queryExportString;
@@ -95,29 +90,6 @@ bool mysqlExporter::exportToMySQL(int chunkSize)
                                                              " INNER JOIN CustRoutesTimeWindowCSV"
                                                              " ON CustomerChainGroupCSV.customerNumber = CustRoutesTimeWindowCSV.customerNumber";
         qDebug() << queryString;
-
-        /*
-        QString queryString = ("SELECT OrderTrackingCSV.invoiceNumber, "
-                               "OrderTrackingCSV.orderTime, "
-                               "OrderTrackingCSV.orderDate, "
-                               "OrderTrackingCSV.invoiceDate, "
-                               "OrderTrackingCSV.rep, "
-                               "OrderTrackingCSV.routeKey, "
-                               "OrderTrackingCSV.stopNumber, "
-                               "RouteProfitabilityCSV.customerNumber, "
-                               "RouteProfitabilityCSV.customerName, "
-                               "RouteProfitabilityCSV.masterCustomerNumber, "
-                               "RouteProfitabilityCSV.pieces, "
-                               "RouteProfitabilityCSV.weight, "
-                               "RouteProfitabilityCSV.cube, "
-                               "RouteProfitabilityCSV.netSales, "
-                               "RouteProfitabilityCSV.cost, "
-                               "RouteProfitabilityCSV.profit "
-                               "FROM OrderTrackingCSV "
-                               "INNER JOIN RouteProfitabilityCSV "
-                               "ON OrderTrackingCSV.invoiceNumber = RouteProfitabilityCSV.invoiceNumber");
-        */
-
 
         QSqlQuery query(database);
         //qDebug() << queryString;
@@ -152,6 +124,13 @@ bool mysqlExporter::exportToMySQL(int chunkSize)
                         queryResult.append(query.value(j).toString());
                     break;
 
+                case QVariant::Type::Double:
+                    if(query.value(j).isNull())
+                        queryResult.append("NULL");
+                    else
+                        queryResult.append(query.value(j).toString());
+                    break;
+
                 case QVariant::Type::String:
                     if(query.value(j).isNull())
                         queryResult.append("NULL");
@@ -160,15 +139,13 @@ bool mysqlExporter::exportToMySQL(int chunkSize)
                     break;
 
                 default:
+                    qDebug() << "unsupported data type from sqlite database " << query.value(j);
                     break;
                 }
-
-
             }
             valueTuples.append("(" + queryResult.join(", ") + ")");
             ++rowCount;
         }
-
 
         queryExportString.clear();
         queryExportString.shrink_to_fit();
@@ -210,28 +187,104 @@ bool mysqlExporter::exportInvoiceToMySQL(int chunkSize)
                                                              " ON OrderTrackingCSV.invoiceNumber = RouteProfitabilityCSV.invoiceNumber";
         qDebug() << queryString;
 
-        /*
-        QString queryString = ("SELECT OrderTrackingCSV.invoiceNumber, "
-                               "OrderTrackingCSV.orderTime, "
-                               "OrderTrackingCSV.orderDate, "
-                               "OrderTrackingCSV.invoiceDate, "
-                               "OrderTrackingCSV.rep, "
-                               "OrderTrackingCSV.routeKey, "
-                               "OrderTrackingCSV.stopNumber, "
-                               "RouteProfitabilityCSV.customerNumber, "
-                               "RouteProfitabilityCSV.customerName, "
-                               "RouteProfitabilityCSV.masterCustomerNumber, "
-                               "RouteProfitabilityCSV.pieces, "
-                               "RouteProfitabilityCSV.weight, "
-                               "RouteProfitabilityCSV.cube, "
-                               "RouteProfitabilityCSV.netSales, "
-                               "RouteProfitabilityCSV.cost, "
-                               "RouteProfitabilityCSV.profit "
-                               "FROM OrderTrackingCSV "
-                               "INNER JOIN RouteProfitabilityCSV "
-                               "ON OrderTrackingCSV.invoiceNumber = RouteProfitabilityCSV.invoiceNumber");
-        */
+        QSqlQuery query(database);
+        //qDebug() << queryString;
+        query.prepare(queryString);
+        success = query.exec();
+        if(!success)
+            qDebug() << query.lastError();
 
+        while(query.next())
+        {
+            if(rowCount == chunkSize)
+            {
+                queryExportString.clear();
+                queryExportString.shrink_to_fit();
+                queryExportString = "REPLACE INTO invoice (" + values.join(", ") + ") VALUES " + valueTuples.join(", ");
+                valueTuples.clear();
+
+                //qDebug() << queryExportString;
+                exportQueryString(queryExportString);
+                rowCount = 0;
+            }
+
+            queryResult.clear();
+            //qDebug() << query.record().count();
+            for(int j = 0; j < query.record().count(); ++j)
+            {
+                //qDebug() << query.value(j).type();
+                switch(query.value(j).type()) {
+
+                case QVariant::Type::LongLong:
+                    if(query.value(j).isNull())
+                        queryResult.append("NULL");
+                    else
+                        queryResult.append(query.value(j).toString());
+                    break;
+
+                case QVariant::Type::Double:
+                    if(query.value(j).isNull())
+                        queryResult.append("NULL");
+                    else
+                        queryResult.append(query.value(j).toString());
+                    break;
+
+                case QVariant::Type::String:
+                    if(query.value(j).isNull())
+                        queryResult.append("NULL");
+                    else
+                        queryResult.append("\"" + query.value(j).toString().toLatin1() + "\"");
+                    break;
+
+                default:
+                    break;
+                }
+
+
+            }
+            valueTuples.append("(" + queryResult.join(", ") + ")");
+            ++rowCount;
+        }
+
+
+        queryExportString.clear();
+        queryExportString.shrink_to_fit();
+        queryExportString = "REPLACE INTO invoice (" + values.join(", ") + ") VALUES " + valueTuples.join(", ");
+        exportQueryString(queryExportString);
+        valueTuples.clear();
+
+
+        query.clear();
+        database.close();
+        return success;
+    }
+}
+
+bool mysqlExporter::exportCustomInvoiceToMySQL(int chunkSize)
+{
+
+    QString queryExportString;
+    QStringList valueTuples;
+    QStringList queryResult;
+    QStringList keys = formatInvoiceCustom_.keys();
+    QStringList values = formatInvoiceCustom_.values();
+    int rowCount = 0;
+
+    {    //Scope to make sure everything is clean regarding DB connections.
+        QString dbPath_ = QCoreApplication::applicationDirPath() + "/potato.db";
+        bool success;
+        QSqlDatabase database;
+        database = database.addDatabase("QSQLITE", "orders");
+        database.setDatabaseName(dbPath_);
+
+        if(!database.open())
+        {
+            qDebug() << "db failed to load in OrderSQLite::makeInitalDatabase";
+            return false;
+        }
+
+        QString queryString = "SELECT " + keys.join(" , ") + " FROM InvoiceCustomCSV";
+        qDebug() << queryString;
 
         QSqlQuery query(database);
         //qDebug() << queryString;

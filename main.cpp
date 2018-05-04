@@ -86,6 +86,30 @@ int main(int argc, char *argv[])
         {"driverID",   DataInfo(6,6,SQLiteType::INTEGER)},
         {"driverName", DataInfo(7,7,SQLiteType::TEXT)}};
 
+    const DataInfoMap formatInvoiceCustom_
+    {
+        {"warehouseNumber", DataInfo(0,1,SQLiteType::INTEGER)},
+        {"customerNumber", DataInfo(1,2, SQLiteType::INTEGER)},
+        {"salesRep", DataInfo(2,3,SQLiteType::TEXT)},
+        {"route", DataInfo(3,4,SQLiteType::TEXT)},
+        {"stopNumber", DataInfo(4,5,SQLiteType::INTEGER)},
+        {"invoiceNumber", DataInfo(5,0,SQLiteType::INTEGER,true)},
+        {"invoiceDate", DataInfo(6,6,SQLiteType::TEXT_DATE,true,"yyyy-MM-dd")},
+        {"shipDate", DataInfo(7,7,SQLiteType::TEXT_DATE,false,"yyyy-MM-dd")},
+        {"orderDate", DataInfo(8,8,SQLiteType::TEXT_DATE,false,"yyyy-MM-dd")},
+        {"orderTime", DataInfo(9,9,SQLiteType::TEXT_TIME,false,"hh:mm:ss")},
+        {"netSales", DataInfo(10,10,SQLiteType::REAL)},
+        {"productCost", DataInfo(11,11, SQLiteType::REAL)},
+        {"GPD", DataInfo(12,12,SQLiteType::REAL)},
+        {"profitPercent", DataInfo(13,13,SQLiteType::REAL)},
+        {"caseCube", DataInfo(14,14,SQLiteType::REAL)},
+        {"casesOrdered", DataInfo(15,15,SQLiteType::INTEGER)},
+        {"casesShipped", DataInfo(16,16,SQLiteType::INTEGER)},
+        {"weight",DataInfo(17,17,SQLiteType::REAL)},
+        {"driverNumber", DataInfo(18,18,SQLiteType::TEXT)},
+        {"truckNumber", DataInfo(19,19, SQLiteType::TEXT)},
+        {"credit", DataInfo(20,20,SQLiteType::TEXT)}};
+
     const DataInfoMap formatCustRoutesTimeWindowCSV_
     {{"division",           DataInfo(0, 1, SQLiteType::TEXT)},
         {"rep",                 DataInfo(1, 2, SQLiteType::TEXT)},
@@ -141,7 +165,7 @@ int main(int argc, char *argv[])
         {"salesLoc",                DataInfo(17,17, SQLiteType::TEXT)},
         {"territory",               DataInfo(18,18,SQLiteType::TEXT)},
         {"rep",                     DataInfo(19,19,SQLiteType::TEXT)},
-        {"merchaniser",             DataInfo(20,20,SQLiteType::TEXT)},
+        {"merchandiser",             DataInfo(20,20,SQLiteType::TEXT)},
         {"exclusionNumber",         DataInfo(21,21,SQLiteType::TEXT)},
         {"proprietaryDesc",         DataInfo(22,22,SQLiteType::TEXT)},
         {"arFeeCode",               DataInfo(23,23,SQLiteType::TEXT)},
@@ -186,16 +210,17 @@ int main(int argc, char *argv[])
         {"profitPrevious",          DataInfo(62,62,SQLiteType::REAL)},
         {"profitPercentPrevious",   DataInfo(63,63,SQLiteType::REAL)}};
 
-//    SQLiteDBThread dbThread(QCoreApplication::applicationDirPath() + "/potato.db");
-//    dbThread.importFromThread(formatOrderTrackingCSV_, "OrderTrackingCSV", true, QCoreApplication::applicationDirPath() + "/orderTrackingHistoryYear.csv", 120000);
-//    dbThread.importFromThread(formatRouteProfitabilityCSV_, "RouteProfitabilityCSV", true, QCoreApplication::applicationDirPath() + "/routeProfitabilityDetailYear.csv", 120000);
-//    dbThread.importFromThread(formatTruckDriverAssignCSV_, "TruckDriverAssignCSV", true, QCoreApplication::applicationDirPath() + "/truckDriverAssign0.csv", 120000);
-//    dbThread.importFromThread(formatCustRoutesTimeWindowCSV_, "CustRoutesTimeWindowCSV", true, QCoreApplication::applicationDirPath() + "/custWin0.csv",1260000);
-//    dbThread.importFromThread(formatCustomerChainGroupCSV_, "CustomerChainGroupCSV", true, QCoreApplication::applicationDirPath() + "/customerChainGroup0.csv", 120000);
+    SQLiteDBThread dbThread(QCoreApplication::applicationDirPath() + "/potato.db");
+    //dbThread.importFromThread(formatInvoiceCustom_, "InvoiceCustomCSV", false, QCoreApplication::applicationDirPath() + "/invoiceCustom0.csv", 120000);
+    //dbThread.importFromThread(formatOrderTrackingCSV_, "OrderTrackingCSV", true, QCoreApplication::applicationDirPath() + "/orderTrackingHistoryYear.csv", 120000);
+    //dbThread.importFromThread(formatRouteProfitabilityCSV_, "RouteProfitabilityCSV", true, QCoreApplication::applicationDirPath() + "/routeProfitabilityDetailYear.csv", 120000);
+    //dbThread.importFromThread(formatTruckDriverAssignCSV_, "TruckDriverAssignCSV", true, QCoreApplication::applicationDirPath() + "/truckDriverAssign0.csv", 120000);
+    //dbThread.importFromThread(formatCustRoutesTimeWindowCSV_, "CustRoutesTimeWindowCSV", true, QCoreApplication::applicationDirPath() + "/custWin0.csv",1260000);
+    //dbThread.importFromThread(formatCustomerChainGroupCSV_, "CustomerChainGroupCSV", true, QCoreApplication::applicationDirPath() + "/customerChainGroup0.csv", 120000);
 
     mysqlExporter test;
-    test.exportToMySQL(50000);
-    test.exportInvoiceToMySQL(50000);
+    //test.exportToMySQL(1000);
+    //test.exportCustomInvoiceToMySQL(1000);
 
     //sqliteDB.populateOrders();
 

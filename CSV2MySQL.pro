@@ -47,7 +47,8 @@ HEADERS += \
     cachedb/ordersqlite.h \
     entity/customer/customer.h \
     cachedb/sqlitedbthread.h \
-    datainfo/datainfo.hpp
+    datainfo/datainfo.hpp \
+    datainfo/dbtodbformat.hpp
 
 FORMS += \
         mainwindow.ui
