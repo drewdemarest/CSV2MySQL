@@ -210,6 +210,70 @@ int main(int argc, char *argv[])
         {"profitPrevious",          DataInfo(62,62,SQLiteType::REAL)},
         {"profitPercentPrevious",   DataInfo(63,63,SQLiteType::REAL)}};
 
+    QVector<SQLCompare> sqlCompares
+    {
+      SQLCompare("CustRoutesTimeWindowCSV", "customerNumber", "CustomerChainGroupCSV", "customerNumber", SQLComp::eq),
+      SQLCompare("CustomerChainGroupCSV", "customerNumber", "CustRoutesTimeWindowCSV", "customerNumber", SQLComp::eq)
+    };
+
+    QVector<DBtoDB> dbFormat
+    {
+                DBtoDB("CustomerChainGroupCSV", "company", "invoice", "company"),
+                DBtoDB("CustomerChainGroupCSV", "division", "invoice", "division"),
+                DBtoDB("CustomerChainGroupCSV", "location", "invoice", "location"),
+                DBtoDB("CustomerChainGroupCSV", "warehouse", "invoice", "warehouse"),
+                DBtoDB("CustomerChainGroupCSV", "customerNumber", "invoice", "customerNumber"),
+                DBtoDB("CustomerChainGroupCSV", "storeNumber", "invoice", "storeNumber"),
+                DBtoDB("CustomerChainGroupCSV", "stopNumber", "invoice", "stopNumber"),
+                DBtoDB("CustomerChainGroupCSV", "phoneNumber", "invoice", "phoneNumber"),
+                DBtoDB("CustomerChainGroupCSV", "billToName", "invoice", "billToName"),
+                DBtoDB("CustomerChainGroupCSV", "chainID", "invoice", "chain"),
+                DBtoDB("CustomerChainGroupCSV", "chainDescription", "invoice", "chainDescription"),
+                DBtoDB("CustomerChainGroupCSV", "groupID", "invoice", "groupID"),
+                DBtoDB("CustomerChainGroupCSV", "groupDescription", "invoice", "groupDescription"),
+                DBtoDB("CustomerChainGroupCSV", "type", "invoice", "type"),
+                DBtoDB("CustomerChainGroupCSV", "ediFlag", "invoice", "ediFlag"),
+                DBtoDB("CustomerChainGroupCSV", "itemMiscTax", "invoice", "itemMiscTax"),
+                DBtoDB("CustomerChainGroupCSV", "salesLoc", "invoice", "salesLocation"),
+                DBtoDB("CustomerChainGroupCSV", "territory", "invoice", "territory"),
+                DBtoDB("CustomerChainGroupCSV", "rep", "invoice", "rep"),
+                DBtoDB("CustomerChainGroupCSV", "merchandiser", "invoice", "merchandiser"),
+                DBtoDB("CustomerChainGroupCSV", "exclusionNumber", "invoice", "exclusionNumber"),
+                DBtoDB("CustomerChainGroupCSV", "proprietaryDesc", "invoice", "proprietaryDesc"),
+                DBtoDB("CustomerChainGroupCSV", "arFeeCode", "invoice", "arFeeCode"),
+                DBtoDB("CustomerChainGroupCSV", "arFeeAmount", "invoice", "arFeeAmount"),
+                DBtoDB("CustomerChainGroupCSV", "routeInvoicng", "invoice", "routeInvoicing"),
+                DBtoDB("CustomerChainGroupCSV", "zone", "invoice", "zone"),
+                DBtoDB("CustomerChainGroupCSV", "firstInvoiceDate", "invoice", "firstInvoiceDate"),
+                DBtoDB("CustomerChainGroupCSV", "lastInvoiceDate", "invoice", "lastInvoiceDate"),
+                DBtoDB("CustomerChainGroupCSV", "terms", "invoice", "terms"),
+                DBtoDB("CustomerChainGroupCSV", "shipToName", "invoice", "customerName"),
+                DBtoDB("CustomerChainGroupCSV", "customerAddress1", "invoice", "customerAddress1"),
+                DBtoDB("CustomerChainGroupCSV", "customerAddress2", "invoice", "customerAddress2"),
+                DBtoDB("CustomerChainGroupCSV", "city", "invoice", "city"),
+                DBtoDB("CustomerChainGroupCSV", "state", "invoice", "State"),
+                DBtoDB("CustomerChainGroupCSV", "zipCode", "invoice", "zipCode"),
+                DBtoDB("CustomerChainGroupCSV", "mondayRoute", "invoice", "mondayRoute"),
+                DBtoDB("CustomerChainGroupCSV", "mondayStop", "invoice", "mondayStop"),
+                DBtoDB("CustomerChainGroupCSV", "tuesdayRoute", "invoice", "tuesdayRoute"),
+                DBtoDB("CustomerChainGroupCSV", "tuesdayStop", "invoice", "tuesdayStop"),
+                DBtoDB("CustomerChainGroupCSV", "wednesdayRoute", "invoice", "wednesdayRoute"),
+                DBtoDB("CustomerChainGroupCSV", "wednesdayStop", "invoice", "wednesdayStop"),
+                DBtoDB("CustomerChainGroupCSV", "thursdayRoute", "invoice", "thursdayRoute"),
+                DBtoDB("CustomerChainGroupCSV", "thursdayStop", "invoice", "thursdayStop"),
+                DBtoDB("CustomerChainGroupCSV", "fridayRoute", "invoice", "fridayRoute"),
+                DBtoDB("CustomerChainGroupCSV", "fridayStop", "invoice", "fridayStop"),
+                DBtoDB("CustomerChainGroupCSV", "saturdayRoute", "invoice", "saturdayRoute"),
+                DBtoDB("CustomerChainGroupCSV", "saturdayStop", "invoice", "saturdayStop"),
+                DBtoDB("CustomerChainGroupCSV", "sundayRoute", "invoice", "sundayRoute"),
+                DBtoDB("CustomerChainGroupCSV", "sundayStop", "invoice", "sundayStop"),
+                DBtoDB("CustRoutesTimeWindowCSV", "timeWindow1Open", "invoice", "win1Start"),
+                DBtoDB("CustRoutesTimeWindowCSV", "timeWindow1Close", "invoice", "win1Stop"),
+                DBtoDB("CustRoutesTimeWindowCSV", "timeWindow2Open", "invoice", "win2Start"),
+                DBtoDB("CustRoutesTimeWindowCSV", "timeWindow2Close", "invoice", "win2Stop"),
+                DBtoDB("CustRoutesTimeWindowCSV", "openTime", "invoice", "open"),
+                DBtoDB("CustRoutesTimeWindowCSV", "closeTime", "invoice", "close")};
+
     SQLiteDBThread dbThread(QCoreApplication::applicationDirPath() + "/potato.db");
     //dbThread.importFromThread(formatInvoiceCustom_, "InvoiceCustomCSV", false, QCoreApplication::applicationDirPath() + "/invoiceCustom0.csv", 120000);
     //dbThread.importFromThread(formatOrderTrackingCSV_, "OrderTrackingCSV", true, QCoreApplication::applicationDirPath() + "/orderTrackingHistoryYear.csv", 120000);
@@ -219,7 +283,7 @@ int main(int argc, char *argv[])
     //dbThread.importFromThread(formatCustomerChainGroupCSV_, "CustomerChainGroupCSV", true, QCoreApplication::applicationDirPath() + "/customerChainGroup0.csv", 120000);
 
     mysqlExporter test;
-    //test.exportToMySQL(1000);
+    test.exportToMySQL(1, sqlCompares, dbFormat);
     //test.exportCustomInvoiceToMySQL(1000);
 
     //sqliteDB.populateOrders();

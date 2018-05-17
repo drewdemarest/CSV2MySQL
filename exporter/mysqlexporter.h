@@ -25,12 +25,37 @@ struct SQLCompare{
         columnB_ = columnB;
         sqlOperator_ = sqlOperator;
 
+        if(tableA_.isNull()  ||
+           tableB_.isNull()  ||
+           columnA_.isNull() ||
+           columnB_.isNull())
+        {
+            valid_ = false;
+        }
+        else
+        {
+            valid_ = true;
+        }
+
         switch(sqlOperator)
         {
         case (SQLComp::eq):
             sqlOperatorStr_ = " = ";
             break;
+        case (SQLComp::lt):
+            sqlOperatorStr_ = " < ";
+            break;
+        case (SQLComp::gt):
+            sqlOperatorStr_ = " > ";
+            break;
+        case (SQLComp::lte):
+            sqlOperatorStr_ = " <= ";
+            break;
+        case (SQLComp::gte):
+            sqlOperatorStr_ = " >= ";
+            break;
         default:
+            valid_ = false;
             break;
         }
 
@@ -54,6 +79,7 @@ struct SQLCompare{
     }
 
     QString toString(){return QString(tableA_ + "." + columnA_ + sqlOperatorStr_ +  tableB_ + "." + columnB_);}
+    bool isValid()const{return valid_;}
 
     QString tableA_;
     QString tableB_;
@@ -61,6 +87,9 @@ struct SQLCompare{
     QString columnB_;
     SQLComp sqlOperator_;
     QString sqlOperatorStr_;
+
+private:
+    bool valid_ = false;
 };
 
 class DBtoDB{
@@ -141,8 +170,8 @@ class DBTransferFormat
 {
 public:
     DBTransferFormat(){
-        std::sort(placeholderCompares.begin(),placeholderCompares.end());
-        std::sort(placeholderFormat.begin(),placeholderFormat.end());
+        std::sort(sqlCompares_.begin(),sqlCompares_.end());
+        std::sort(dbFormat_.begin(),dbFormat_.end());
     }
     ~DBTransferFormat(){}
 
@@ -150,7 +179,7 @@ public:
         QString queryString = "SELECT ";
         QStringList db2dbList;
         QVector<QString> tables;
-        for(auto dbdb:placeholderFormat)
+        for(auto dbdb:dbFormat_)
         {
             db2dbList.append(dbdb.getTableFrom() + "." + dbdb.getColumnFrom());
             if(!tables.contains(dbdb.getTableFrom()))
@@ -175,7 +204,7 @@ public:
                     ++i;
                 }
                 queryString.append("INNER JOIN " + tables[i] + " ON ");
-                for(auto compare:placeholderCompares)
+                for(auto compare:sqlCompares_)
                 {
                     if(compare.tableA_ == tables[i])
                     {
@@ -190,12 +219,51 @@ public:
 
     }
 
-    QString makeInsertIntoDB2(){return QString();}
+    QString makeReplaceIntoDB2(const QStringList &valueTuples)
+    {
+        QString queryString; queryString.reserve(10000);
+        QStringList values;
+
+        for(auto dbdb:dbFormat_)
+        {
+            values.append(dbdb.getTableTo() + "." + dbdb.getColumnTo());
+        }
+
+        queryString.append("REPLACE INTO (" + values.join(", ") +  ") VALUES " + valueTuples.join(", "));
+        qDebug() << queryString;
+        values.clear();
+        return queryString;
+    }
+
+    bool setSQLCompares(const QVector<SQLCompare> sqlCompares)
+    {
+        for(auto compare:sqlCompares)
+            if(!compare.isValid())
+            {
+                qDebug() << "Failed to import sqlCompares. Not all compares are valid";
+                return false;
+            }
+
+        sqlCompares_ = sqlCompares;
+        return true;
+    }
+
+    bool setDBtoDBFormat(const QVector<DBtoDB> dbFormats)
+    {
+        for(auto format:dbFormats)
+            if(!format.isValid())
+            {
+                qDebug() << "Failed to import dbFormats. Not all DBtoDB formats are valid";
+                return false;
+            }
+
+        dbFormat_ = dbFormats;
+        return true;}
 
 private:
 
-
-    QVector<SQLCompare> placeholderCompares
+/*  // Test Code
+    QVector<SQLCompare> sqlCompares
     {
         SQLCompare("E", "x", "D", "x", SQLComp::eq),
         SQLCompare("D", "x", "B", "x", SQLComp::eq),
@@ -204,16 +272,16 @@ private:
         SQLCompare("B", "x", "E", "x", SQLComp::eq)
     };
 
-//    QVector<SQLCompare> placeholderCompares
-//    {
-//        SQLCompare("C","x","A","x",SQLComp::eq),
-//        SQLCompare("A","x","B","x",SQLComp::eq),
-//        SQLCompare("D","x","C","x",SQLComp::eq),
-//        SQLCompare("B","x","E","x",SQLComp::eq),
-//        SQLCompare("E","x","A","x",SQLComp::eq)
-//    };
+    QVector<SQLCompare> sqlCompares
+    {
+        SQLCompare("C","x","A","x",SQLComp::eq),
+        SQLCompare("A","x","B","x",SQLComp::eq),
+        SQLCompare("D","x","C","x",SQLComp::eq),
+        SQLCompare("B","x","E","x",SQLComp::eq),
+        SQLCompare("E","x","A","x",SQLComp::eq)
+    };
 
-    QVector<DBtoDB> placeholderFormat
+    QVector<DBtoDB> dbFormat_
     {
         DBtoDB("C","c","Z","z"),
         DBtoDB("A","a","X","x"),
@@ -221,71 +289,10 @@ private:
         DBtoDB("B","b","Y","y"),
         DBtoDB("E","e","V","v")
     };
+*/
 
-//    QVector<SQLCompare> placeholderCompares
-//    {
-//      SQLCompare("CustRoutesTimeWindowCSV", "customerNumber", "CustomerChainGroupCSV", "customerNumber", SQLComp::eq),
-//      SQLCompare("OrderTrackingCSV", "customerNumber", "CustomerChainGroupCSV", "customerNumber", SQLComp::eq)
-//    };
-
-//    QVector<DBtoDB> placeholderFormat
-//    {
-//                DBtoDB("CustomerChainGroupCSV", "company", "invoice", "company"),
-//                DBtoDB("CustomerChainGroupCSV", "division", "invoice", "division"),
-//                DBtoDB("CustomerChainGroupCSV", "location", "invoice", "location"),
-//                DBtoDB("CustomerChainGroupCSV", "warehouse", "invoice", "warehouse"),
-//                DBtoDB("CustomerChainGroupCSV", "customerNumber", "invoice", "customerNumber"),
-//                DBtoDB("CustomerChainGroupCSV", "storeNumber", "invoice", "storeNumber"),
-//                DBtoDB("CustomerChainGroupCSV", "stopNumber", "invoice", "stopNumber"),
-//                DBtoDB("CustomerChainGroupCSV", "phoneNumber", "invoice", "phoneNumber"),
-//                DBtoDB("CustomerChainGroupCSV", "billToName", "invoice", "billToName"),
-//                DBtoDB("CustomerChainGroupCSV", "chainID", "invoice", "chain"),
-//                DBtoDB("CustomerChainGroupCSV", "chainDescription", "invoice", "chainDescription"),
-//                DBtoDB("CustomerChainGroupCSV", "groupID", "invoice", "groupID"),
-//                DBtoDB("CustomerChainGroupCSV", "groupDescription", "invoice", "groupDescription"),
-//                DBtoDB("CustomerChainGroupCSV", "type", "invoice", "type"),
-//                DBtoDB("CustomerChainGroupCSV", "ediFlag", "invoice", "ediFlag"),
-//                DBtoDB("CustomerChainGroupCSV", "itemMiscTax", "invoice", "itemMiscTax"),
-//                DBtoDB("CustomerChainGroupCSV", "salesLoc", "invoice", "salesLocation"),
-//                DBtoDB("CustomerChainGroupCSV", "territory", "invoice", "territory"),
-//                DBtoDB("CustomerChainGroupCSV", "rep", "invoice", "rep"),
-//                DBtoDB("CustomerChainGroupCSV", "merchandiser", "invoice", "merchandiser"),
-//                DBtoDB("CustomerChainGroupCSV", "exclusionNumber", "invoice", "exclusionNumber"),
-//                DBtoDB("CustomerChainGroupCSV", "proprietaryDesc", "invoice", "proprietaryDesc"),
-//                DBtoDB("CustomerChainGroupCSV", "arFeeCode", "invoice", "arFeeCode"),
-//                DBtoDB("CustomerChainGroupCSV", "arFeeAmount", "invoice", "arFeeAmount"),
-//                DBtoDB("CustomerChainGroupCSV", "routeInvoicng", "invoice", "routeInvoicing"),
-//                DBtoDB("CustomerChainGroupCSV", "zone", "invoice", "zone"),
-//                DBtoDB("CustomerChainGroupCSV", "firstInvoiceDate", "invoice", "firstInvoiceDate"),
-//                DBtoDB("CustomerChainGroupCSV", "lastInvoiceDate", "invoice", "lastInvoiceDate"),
-//                DBtoDB("CustomerChainGroupCSV", "terms", "invoice", "terms"),
-//                DBtoDB("CustomerChainGroupCSV", "shipToName", "invoice", "customerName"),
-//                DBtoDB("CustomerChainGroupCSV", "customerAddress1", "invoice", "customerAddress1"),
-//                DBtoDB("CustomerChainGroupCSV", "customerAddress2", "invoice", "customerAddress2"),
-//                DBtoDB("CustomerChainGroupCSV", "city", "invoice", "city"),
-//                DBtoDB("CustomerChainGroupCSV", "state", "invoice", "State"),
-//                DBtoDB("CustomerChainGroupCSV", "zipCode", "invoice", "zipCode"),
-//                DBtoDB("CustomerChainGroupCSV", "mondayRoute", "invoice", "mondayRoute"),
-//                DBtoDB("CustomerChainGroupCSV", "mondayStop", "invoice", "mondayStop"),
-//                DBtoDB("CustomerChainGroupCSV", "tuesdayRoute", "invoice", "tuesdayRoute"),
-//                DBtoDB("CustomerChainGroupCSV", "tuesdayStop", "invoice", "tuesdayStop"),
-//                DBtoDB("CustomerChainGroupCSV", "wednesdayRoute", "invoice", "wednesdayRoute"),
-//                DBtoDB("CustomerChainGroupCSV", "wednesdayStop", "invoice", "wednesdayStop"),
-//                DBtoDB("CustomerChainGroupCSV", "thursdayRoute", "invoice", "thursdayRoute"),
-//                DBtoDB("CustomerChainGroupCSV", "thursdayStop", "invoice", "thursdayStop"),
-//                DBtoDB("CustomerChainGroupCSV", "fridayRoute", "invoice", "fridayRoute"),
-//                DBtoDB("CustomerChainGroupCSV", "fridayStop", "invoice", "fridayStop"),
-//                DBtoDB("CustomerChainGroupCSV", "saturdayRoute", "invoice", "saturdayRoute"),
-//                DBtoDB("CustomerChainGroupCSV", "saturdayStop", "invoice", "saturdayStop"),
-//                DBtoDB("CustomerChainGroupCSV", "sundayRoute", "invoice", "sundayRoute"),
-//                DBtoDB("CustomerChainGroupCSV", "sundayStop", "invoice", "sundayStop"),
-//                DBtoDB("CustRoutesTimeWindowCSV", "timeWindow1Open", "invoice", "win1Start"),
-//                DBtoDB("CustRoutesTimeWindowCSV", "timeWindow1Close", "invoice", "win1Stop"),
-//                DBtoDB("CustRoutesTimeWindowCSV", "timeWindow2Open", "invoice", "win2Start"),
-//                DBtoDB("CustRoutesTimeWindowCSV", "timeWindow2Close", "invoice", "win2Stop"),
-//                DBtoDB("CustRoutesTimeWindowCSV", "openTime", "invoice", "open"),
-//                DBtoDB("CustRoutesTimeWindowCSV", "closeTime", "invoice", "close"),
-//                DBtoDB("OrderTrackingCSV", "user", "place", "place")};
+    QVector<SQLCompare> sqlCompares_;
+    QVector<DBtoDB> dbFormat_;
 };
 
 
@@ -296,7 +303,7 @@ public:
     explicit mysqlExporter(QObject *parent = nullptr);
 
     bool exportQueryString(const QString &queryString);
-    bool exportToMySQL(int chunkSize, QVector<QString> tables);
+    bool exportToMySQL(int chunkSize, const QVector<DBtoDB> &dbFormat, const QVector<SQLCompare> &sqlCompares);
     bool exportInvoiceToMySQL(int chunkSize);
     bool exportCustomInvoiceToMySQL(int chunkSize);
 

@@ -63,14 +63,15 @@ bool mysqlExporter::exportQueryString(const QString &queryString)
     return success;
 }
 
-bool mysqlExporter::exportToMySQL(int chunkSize, QVector<QString>tables)
+bool mysqlExporter::exportToMySQL(int chunkSize, const QVector<SQLCompare> &sqlCompares, const QVector<DBtoDB> &dbFormat)
 {
 
     QString queryExportString;
     QStringList valueTuples;
     QStringList queryResult;
-    QStringList keys = formatCustomerChainGroupCSV_.keys();
-    QStringList values = formatCustomerChainGroupCSV_.values();
+    DBTransferFormat dbTransfer;
+    dbTransfer.setDBtoDBFormat(dbFormat);
+    dbTransfer.setSQLCompares(sqlCompares);
     int rowCount = 0;
 
     {    //Scope to make sure everything is clean regarding DB connections.
@@ -86,9 +87,7 @@ bool mysqlExporter::exportToMySQL(int chunkSize, QVector<QString>tables)
             return false;
         }
 
-        QString queryString = "SELECT " + keys.join(" , ") + " FROM CustomerChainGroupCSV"
-                                                             " INNER JOIN CustRoutesTimeWindowCSV"
-                                                             " ON CustomerChainGroupCSV.customerNumber = CustRoutesTimeWindowCSV.customerNumber";
+        QString queryString = dbTransfer.makeSelectFromDB1();
         qDebug() << queryString;
 
         QSqlQuery query(database);
@@ -104,8 +103,8 @@ bool mysqlExporter::exportToMySQL(int chunkSize, QVector<QString>tables)
             {
                 queryExportString.clear();
                 queryExportString.shrink_to_fit();
-                queryExportString = "REPLACE INTO custVerbose (" + values.join(", ") + ") VALUES " + valueTuples.join(", ");
-                qDebug() << queryExportString;
+                queryExportString = dbTransfer.makeReplaceIntoDB2(valueTuples);
+                //qDebug() << queryExportString;
                 exportQueryString(queryExportString);
                 rowCount = 0;
             }
@@ -149,7 +148,7 @@ bool mysqlExporter::exportToMySQL(int chunkSize, QVector<QString>tables)
 
         queryExportString.clear();
         queryExportString.shrink_to_fit();
-        queryExportString = "REPLACE INTO custVerbose (" + values.join(", ") + ") VALUES " + valueTuples.join(", ");
+        queryExportString = dbTransfer.makeReplaceIntoDB2(valueTuples);
         exportQueryString(queryExportString);
         valueTuples.clear();
         query.clear();
