@@ -283,8 +283,8 @@ int main(int argc, char *argv[])
     //dbThread.importFromThread(formatCustomerChainGroupCSV_, "CustomerChainGroupCSV", true, QCoreApplication::applicationDirPath() + "/customerChainGroup0.csv", 120000);
 
     mysqlExporter test;
-    test.exportToMySQL(1, sqlCompares, dbFormat);
-    //test.exportCustomInvoiceToMySQL(1000);
+    //test.exportToMySQL(1, sqlCompares, dbFormat);
+    test.exportCustomInvoiceToMySQL(1);
 
     //sqliteDB.populateOrders();
 

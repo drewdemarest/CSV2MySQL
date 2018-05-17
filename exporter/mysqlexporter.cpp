@@ -28,7 +28,9 @@ bool mysqlExporter::exportQueryString(const QString &queryString)
 
         if(sslDB.open())
         {
+            qDebug() << sslDB.transaction();
             qDebug() << "dbOpen";
+            qDebug() << queryString;
             QSqlQuery query(sslDB);
             success = query.exec(queryString);
 
@@ -286,7 +288,7 @@ bool mysqlExporter::exportCustomInvoiceToMySQL(int chunkSize)
         qDebug() << queryString;
 
         QSqlQuery query(database);
-        //qDebug() << queryString;
+        qDebug() << queryString;
         query.prepare(queryString);
         success = query.exec();
         if(!success)

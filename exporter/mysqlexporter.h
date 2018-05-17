@@ -128,7 +128,6 @@ public:
         {
             qDebug() << "Error columnTo is empty in DBtoDB format";
             valid_ = false;
-
         }
     }
 
@@ -158,7 +157,7 @@ public:
     QString getColumnTo()const{return columnTo_;}
 
 private:
-    bool valid_ = false;
+    bool valid_ = true;
     QString tableFrom_;
     QString tableTo_;
     QString columnFrom_;
@@ -303,7 +302,7 @@ public:
     explicit mysqlExporter(QObject *parent = nullptr);
 
     bool exportQueryString(const QString &queryString);
-    bool exportToMySQL(int chunkSize, const QVector<DBtoDB> &dbFormat, const QVector<SQLCompare> &sqlCompares);
+    bool exportToMySQL(int chunkSize, const QVector<SQLCompare> &sqlCompares, const QVector<DBtoDB> &dbFormat);
     bool exportInvoiceToMySQL(int chunkSize);
     bool exportCustomInvoiceToMySQL(int chunkSize);
 

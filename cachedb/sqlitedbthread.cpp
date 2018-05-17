@@ -33,7 +33,7 @@ void SQLiteDBThread::handleResult(const bool &success)
     qDebug() << "result is " << success;
     sqliteThread.exit();
     sqliteThread.wait();
-    malloc_trim(0);
+    //malloc_trim(0);
 }
 
 void SQLiteDBThread::dinger()
