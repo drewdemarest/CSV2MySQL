@@ -8,6 +8,7 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QSqlError>
+#include <QSqlDriver>
 #include "datainfo/datainfo.hpp"
 #include "json2sqlite/json2sqlite.h"
 

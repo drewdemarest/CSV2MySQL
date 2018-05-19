@@ -1,5 +1,6 @@
 #include "mysqlexporter.h"
 #include <unistd.h>
+
 mysqlExporter::mysqlExporter(QObject *parent) : QObject(parent)
 {
     //load the mysql settings from a db.
@@ -25,14 +26,16 @@ bool mysqlExporter::exportQueryString(const QString &queryString)
         sslDB.setUserName(mySQLSettings_["userName"].toString());
         sslDB.setPassword(mySQLSettings_["password"].toString());
         sslDB.setConnectOptions(caStr + clientKeyStr + clientCertStr);
-
         if(sslDB.open())
         {
-            qDebug() << sslDB.transaction();
+            //qDebug() << QSqlDriver::hasFeature(QSqlDriver::Transactions);
+            qDebug() << sslDB.driver()->beginTransaction();
             qDebug() << "dbOpen";
             qDebug() << queryString;
+
             QSqlQuery query(sslDB);
             success = query.exec(queryString);
+            qDebug() << sslDB.driver()->commitTransaction();
 
             if(!success)
             {
