@@ -26,6 +26,7 @@ public:
 
     QThread sqliteThread;
     OrderSQLite *sqliteDB;
+    bool importInProgress();
 
 signals:
     void operate(const QMap<QString,DataInfo> &csvFormat,
@@ -40,6 +41,7 @@ public slots:
 
 private:
     QString dbPath_;
+    bool importInProgress_ = false;
 };
 
 #endif // SQLITEDBTHREAD_H

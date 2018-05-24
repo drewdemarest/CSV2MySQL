@@ -20,9 +20,11 @@ void SQLiteDBThread::importFromThread(const DataInfoMap &csvFormat,
 {
     while(sqliteThread.isRunning())
     {
+        importInProgress_ = true;
         qApp->processEvents();
     }
     qDebug() << "ding";
+    importInProgress_ = false;
 
     sqliteThread.start();
     emit operate(csvFormat, tableName, hasHeaders, filePath, chunkSize);
@@ -39,4 +41,9 @@ void SQLiteDBThread::handleResult(const bool &success)
 void SQLiteDBThread::dinger()
 {
     qDebug() << "ding";
+}
+
+bool SQLiteDBThread::importInProgress()
+{
+    return importInProgress_;
 }

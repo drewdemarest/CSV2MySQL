@@ -278,11 +278,18 @@ bool OrderSQLite::importCSVtoSQLite(const DataInfoMap &csvFormat,
     lineVec.clear();
     lineVec.shrink_to_fit();
 
+    emit importFinished(true);
+    QDir outDir(QCoreApplication::applicationDirPath() + "/OUT/");
+    qDebug() << filePath;
+    qDebug() << "I AM HERE " + outDir.path() + "/invoice" + QDateTime::currentDateTime().toString(Qt::ISODate) + ".csv";
+    //outDir.rename(filePath, outDir.path() + "/invoice" + QDateTime::currentDateTime().toString(Qt::ISODate) + ".csv");
+
+    csvFile->rename(outDir.path() + "/invoice" + QDateTime::currentDateTime().toString("yyyy-MM-dd-T-HH-mm-ss-zzz") + ".csv");
     csvFile->flush();
     csvFile->close();
     delete csvFile;
 
-    emit importFinished(true);
+
     return true;
 }
 

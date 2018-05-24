@@ -2,11 +2,12 @@
 #include "importer/charliescsvimporter.h"
 #include "entity/order/orderfactory.h"
 #include "entity/order/order.h"
-#include "cachedb/sqlitedbthread.h"
+//#include "cachedb/sqlitedbthread.h"
 #include "exporter/mysqlexporter.h"
+#include "cachedb/ordersqlite.h".h"
 #include <QApplication>
 #include <malloc.h>
-//#include <unistd.h>
+#include <unistd.h>
 
 int getInvoiceNumbers(QPair<int, QVariantMap> pair)
 {
@@ -274,17 +275,42 @@ int main(int argc, char *argv[])
                 DBtoDB("CustRoutesTimeWindowCSV", "openTime", "invoice", "open"),
                 DBtoDB("CustRoutesTimeWindowCSV", "closeTime", "invoice", "close")};
 
-    SQLiteDBThread dbThread(QCoreApplication::applicationDirPath() + "/potato.db");
-    //dbThread.importFromThread(formatInvoiceCustom_, "InvoiceCustomCSV", false, QCoreApplication::applicationDirPath() + "/invoiceCustom0.csv", 120000);
+    while(true)
+    {
+        //SQLiteDBThread dbThread(QCoreApplication::applicationDirPath() + "/potato.db");
+        QFile db(QCoreApplication::applicationDirPath() + "/potato.db");
+        QDir importInvoiceDir(QString(QCoreApplication::applicationDirPath() + "/INVOICE/"));
+        mysqlExporter test;
+
+        if(importInvoiceDir.entryList().size() > 2)
+        {
+            for(auto file:importInvoiceDir.entryList())
+            {
+                if(file != "." && file != "..")
+                {
+                    qDebug() << file;
+                    OrderSQLite dbThread(QCoreApplication::applicationDirPath() + "/potato.db");
+                    dbThread.importCSVtoSQLite(formatInvoiceCustom_, "InvoiceCustomCSV", true, importInvoiceDir.filePath(file), 120000);
+                }
+            }
+        }
+        sleep(5);
+        test.exportCustomInvoiceToMySQL(3000);
+
+        qDebug() << "Boop";
+        sleep(30);
+        db.remove();
+        sleep(10);
+    }
+
     //dbThread.importFromThread(formatOrderTrackingCSV_, "OrderTrackingCSV", true, QCoreApplication::applicationDirPath() + "/orderTrackingHistoryYear.csv", 120000);
     //dbThread.importFromThread(formatRouteProfitabilityCSV_, "RouteProfitabilityCSV", true, QCoreApplication::applicationDirPath() + "/routeProfitabilityDetailYear.csv", 120000);
     //dbThread.importFromThread(formatTruckDriverAssignCSV_, "TruckDriverAssignCSV", true, QCoreApplication::applicationDirPath() + "/truckDriverAssign0.csv", 120000);
     //dbThread.importFromThread(formatCustRoutesTimeWindowCSV_, "CustRoutesTimeWindowCSV", true, QCoreApplication::applicationDirPath() + "/custWin0.csv",120000);
     //dbThread.importFromThread(formatCustomerChainGroupCSV_, "CustomerChainGroupCSV", true, QCoreApplication::applicationDirPath() + "/customerChainGroup0.csv", 120000);
 
-    mysqlExporter test;
     //test.exportToMySQL(1, sqlCompares, dbFormat);
-    test.exportCustomInvoiceToMySQL(1);
+    //test.exportCustomInvoiceToMySQL(1);
 
     //sqliteDB.populateOrders();
 
